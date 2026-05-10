@@ -98,9 +98,10 @@ function BlockGap({ onInsertText, onInsertMath }: GapProps) {
 
 interface Props {
   toolGroups?: ToolGroups
+  examMode?: boolean
 }
 
-export function DocumentEditor({ toolGroups = ALL_GROUPS }: Props) {
+export function DocumentEditor({ toolGroups = ALL_GROUPS, examMode = false }: Props) {
   const [blocks, setBlocks] = useState<DocumentBlock[]>(() => [makeMathBlock()])
   const [mathLatex, setMathLatex] = useState<Record<string, string>>({})
 
@@ -139,7 +140,7 @@ export function DocumentEditor({ toolGroups = ALL_GROUPS }: Props) {
   // ── Render ───────────────────────────────────────────────────────────────────
 
   return (
-    <div className="document-editor">
+    <div className={`document-editor${examMode ? ' exam-mode' : ''}`}>
       {blocks.map((block, idx) => (
         <div key={block.id}>
           {block.type === 'text' ? (
@@ -165,17 +166,29 @@ export function DocumentEditor({ toolGroups = ALL_GROUPS }: Props) {
         </div>
       ))}
 
-      <div className="doc-export-bar">
-        <span className="latex-label">Full LaTeX</span>
-        <code className="latex-code">{fullLatex || <em>start writing…</em>}</code>
-        <button
-          className="copy-btn"
-          onClick={() => navigator.clipboard.writeText(fullLatex)}
-          disabled={!fullLatex}
-        >
-          Copy
-        </button>
-      </div>
+      {examMode ? (
+        <div className="exam-copy-bar">
+          <button
+            className="exam-copy-btn"
+            onClick={() => navigator.clipboard.writeText(fullLatex)}
+            disabled={!fullLatex}
+          >
+            Copy answer as LaTeX
+          </button>
+        </div>
+      ) : (
+        <div className="doc-export-bar">
+          <span className="latex-label">Full LaTeX</span>
+          <code className="latex-code">{fullLatex || <em>start writing…</em>}</code>
+          <button
+            className="copy-btn"
+            onClick={() => navigator.clipboard.writeText(fullLatex)}
+            disabled={!fullLatex}
+          >
+            Copy
+          </button>
+        </div>
+      )}
     </div>
   )
 }
