@@ -874,3 +874,114 @@ body {
   color: #999;
   margin-bottom: 10px;
 }
+
+/* ── Exam mode ───────────────────────────────────────────────────────────────── */
+
+/* Remove document editor padding — student-exam-view handles outer spacing */
+.exam-mode {
+  padding: 0;
+}
+
+/* Compact block spacing */
+.exam-mode .doc-block {
+  margin: 0;
+}
+
+.exam-mode .doc-block--text {
+  padding: 0;
+}
+
+/* Math wrapper: strip margin/padding when unfocused */
+.exam-mode .doc-block--math .editor-wrapper {
+  padding: 0;
+  gap: 0;
+}
+
+/* Toolbar hidden until the editor is focused */
+.exam-mode .editor-toolbar {
+  display: none;
+}
+
+.exam-mode .editor-wrapper:focus-within .editor-toolbar {
+  display: flex;
+}
+
+/* Unfocused math display: invisible chrome, acts like inline math */
+.exam-mode .editor-display {
+  border-color: transparent;
+  background: transparent;
+  box-shadow: none;
+  min-height: 44px;
+  padding: 6px 4px;
+}
+
+/* Focused math display: full editing chrome */
+.exam-mode .editor-wrapper:focus-within .editor-display {
+  border-color: #4a8fd4;
+  background: #fff;
+  box-shadow: 0 0 0 3px rgba(74, 143, 212, 0.14);
+  min-height: 90px;
+  padding: 20px 28px;
+}
+
+/* Text block: borderless until focused */
+.exam-mode .doc-text-area {
+  border-color: transparent;
+  background: transparent;
+  padding: 4px 8px;
+}
+
+.exam-mode .doc-text-area:focus {
+  border-color: #dde1e7;
+  background: #fff;
+}
+
+/* Block gaps: always visible on mobile (hover doesn't work on touch) */
+.exam-mode .block-gap {
+  opacity: 1;
+  margin: 1px 0;
+}
+
+.exam-mode .block-gap-btn {
+  font-size: 0.7rem;
+  padding: 1px 8px;
+  color: #ccc;
+  border-color: #eee;
+}
+
+.exam-mode .block-gap-btn:hover,
+.exam-mode .block-gap-btn:active {
+  color: #2d6bb0;
+  border-color: #4a8fd4;
+  background: #e8f0fe;
+}
+
+/* Copy answer button */
+.exam-copy-bar {
+  display: flex;
+  justify-content: flex-end;
+  padding: 14px 0 4px;
+  border-top: 1px solid #eef0f3;
+  margin-top: 10px;
+}
+
+.exam-copy-btn {
+  padding: 8px 22px;
+  font-size: 0.85rem;
+  font-weight: 600;
+  background: #4a8fd4;
+  color: #fff;
+  border: none;
+  border-radius: 20px;
+  cursor: pointer;
+  transition: background 0.12s;
+}
+
+.exam-copy-btn:hover {
+  background: #2d6bb0;
+}
+
+.exam-copy-btn:disabled {
+  opacity: 0.4;
+  cursor: default;
+}

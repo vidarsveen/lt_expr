@@ -33,7 +33,7 @@ export function StudentExamView({ question, onBack }: Props) {
 
       <div className="student-answer-section">
         <div className="student-answer-label">Your answer</div>
-        <DocumentEditor toolGroups={question.groups} />
+        <DocumentEditor toolGroups={question.groups} examMode />
       </div>
     </div>
   )
