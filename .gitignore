@@ -8,6 +8,9 @@ tests/e2e/screenshots/
 # Scratch screenshots from early development
 *.png
 
+# Allow the demo video served from public/
+!public/demo.webm
+
 # Crash dumps
 *.stackdump
 

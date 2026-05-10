@@ -1,8 +1,12 @@
 /**
- * Multi-block student session — TMA4100 Oppgave 2.
- * The problem is shown on the exam card; the student jumps straight into
- * writing the solution across math + text blocks, with the viewport
- * scrolling to keep the active block in frame.
+ * Multi-block student session — TMA4100 Oppgave 2 (improper integral).
+ *
+ * Mathematically correct solution flow:
+ *   Math 1:  lim_{b→∞} ∫₁^b 3/(x+2)² dx      ← define the improper integral properly
+ *   Text 1:  "The antiderivative is −3/(x+2). Evaluating at the bounds:"
+ *   Math 2:  = lim_{b→∞} [−3/(x+2)]₁^b        ← introduce b in the eval bracket
+ *   Text 2:  "As b→∞ the upper term →0. Lower bound gives −3/3 = −1:"
+ *   Math 3:  = 0 − (−1) = 1
  *
  * Run with: npm run student:multi
  */
@@ -59,17 +63,13 @@ async function clickLocator(page, locator, opts = {}) {
   await clickAt(page, x, y, opts)
 }
 
-// ─── Keyboard / typing helpers ────────────────────────────────────────────────
+// ─── Keyboard helpers ─────────────────────────────────────────────────────────
 
-// Dispatch to the Nth math editor's hidden textarea (0-indexed from top)
-async function key(page, k, opts = {}, editorN = -1) {
-  const selector = editorN < 0
-    ? '.editor-textarea'
-    : `.editor-textarea`
-  const loc = editorN < 0
-    ? page.locator(selector).last()
-    : page.locator(selector).nth(editorN)
-  await loc.dispatchEvent('keydown', {
+// Which math editor (0-indexed) is currently active
+let activeEditorN = 0
+
+async function key(page, k, opts = {}) {
+  await page.locator('.editor-textarea').nth(activeEditorN).dispatchEvent('keydown', {
     key: k, bubbles: true, cancelable: true,
     ctrlKey: opts.ctrl ?? false, metaKey: opts.meta ?? false,
     altKey: opts.alt ?? false, shiftKey: opts.shift ?? false,
@@ -77,8 +77,8 @@ async function key(page, k, opts = {}, editorN = -1) {
   await page.waitForTimeout(opts.wait ?? 70)
 }
 
-async function pressTab(page)        { await key(page, 'Tab', { wait: 300 }) }
-async function think(page, ms)       { await page.waitForTimeout(ms) }
+async function pressTab(page) { await key(page, 'Tab', { wait: 300 }) }
+async function think(page, ms) { await page.waitForTimeout(ms) }
 
 async function typeMath(page, str, wpm = 50) {
   const ms = Math.round(60000 / (wpm * 5))
@@ -87,7 +87,6 @@ async function typeMath(page, str, wpm = 50) {
   }
 }
 
-// Type into a regular <textarea> (text blocks)
 async function typeText(page, locator, str, wpm = 60) {
   await locator.click()
   await page.waitForTimeout(150)
@@ -103,22 +102,19 @@ function toolbarBtn(page, n, text) {
   return page.locator('.editor-toolbar').nth(n).locator('.toolbar-btn', { hasText: text })
 }
 
-// Focus the Nth math editor by clicking its display
+// Focus the Nth math editor and update activeEditorN
 async function focusMathEditor(page, n) {
+  activeEditorN = n
   await page.locator('.editor-display').nth(n).click()
   await page.waitForTimeout(200)
 }
 
-// Scroll the last block into a comfortable viewing position
+// Scroll the last block into comfortable view
 async function scrollToLast(page) {
-  const last = page.locator('.doc-block').last()
-  await last.scrollIntoViewIfNeeded()
-  // nudge up a bit so there's context above
+  await page.locator('.doc-block').last().scrollIntoViewIfNeeded()
   await page.evaluate(() => window.scrollBy(0, -80))
   await page.waitForTimeout(300)
 }
-
-// ─── Block insertion helpers ──────────────────────────────────────────────────
 
 async function addTextBlock(page) {
   const btn = page.locator('.block-gap-btn', { hasText: '+ Text' }).last()
@@ -134,7 +130,7 @@ async function addMathBlock(page) {
 
 // ─── Main ─────────────────────────────────────────────────────────────────────
 
-console.log('\n🎬  Starting multi-block student session…\n')
+console.log('\n🎬  Starting student session…\n')
 
 const browser = await chromium.launch({ headless: true })
 const context = await browser.newContext({
@@ -144,126 +140,189 @@ const page = await context.newPage()
 await page.setViewportSize({ width: W, height: H })
 await page.mouse.move(W / 2, H / 2)
 
-// ── Load & navigate to exam ────────────────────────────────────────────────────
+// ── Load & navigate to Q2 ─────────────────────────────────────────────────────
 await page.goto(BASE_URL)
 await page.waitForTimeout(900)
 
 await clickLocator(page, page.locator('button', { hasText: 'TMA4100' }).first(), { hover: 200, after: 600 })
 
-// ── Student reads Q2 ──────────────────────────────────────────────────────────
 const q2Card = page.locator('.exam-card').filter({ hasText: 'Oppgave 2' })
 await q2Card.scrollIntoViewIfNeeded()
 await think(page, 400)
 
 const q2Box = await q2Card.boundingBox()
 await moveTo(page, q2Box.x + 120, q2Box.y + 50, 30)
-await think(page, 500)
+await think(page, 600)
 await moveTo(page, q2Box.x + 500, q2Box.y + 90, 20)
 await think(page, 900)
 await snap(page, '01_reading_q2')
 
-// ── Click "Try in editor →" ───────────────────────────────────────────────────
 await clickLocator(page, q2Card.locator('.exam-try-btn'), { hover: 300, after: 800 })
 await page.locator('.editor-toolbar').waitFor({ state: 'visible', timeout: 5000 })
-await think(page, 600)   // student thinks before starting
+await think(page, 700)
 await snap(page, '02_editor_ready')
 
 // ─────────────────────────────────────────────────────────────────────────────
-// MATH BLOCK 1 — antiderivative evaluation: [−3/(x+2)]₁^∞
+// MATH BLOCK 1 — lim_{b→∞} ∫₁^b 3/(x+2)² dx
+//
+// Tab trace (inSlot-empty skipping rules):
+//   limitVar → approach → limit.body → integral.lower → integral.upper
+//   → integrand → frac.num → frac.den → power.exp
+//   → [skip: frac.den tail, integrand tail] → integral.variable
+//   → [skip: limit.body tail] → root trailing
 // ─────────────────────────────────────────────────────────────────────────────
-console.log('\n  [Math 1] Eval bracket [-3/(x+2)]₁^∞')
+console.log('\n  [Math 1] lim_{b→∞} ∫₁^b 3/(x+2)² dx')
 
 await focusMathEditor(page, 0)
 await think(page, 500)
 
-// [·] eval bracket
-await clickLocator(page, toolbarBtn(page, 0, '[·]'), { hover: 250, after: 500 })
-await snap(page, '03_eval_bracket_inserted')
+// Insert limit (lim button)
+await clickLocator(page, toolbarBtn(page, 0, 'lim'), { hover: 250, after: 500 })
+await snap(page, '03_limit_inserted')
 
-// Body: fraction -3/(x+2)
-await clickLocator(page, toolbarBtn(page, 0, '½'), { hover: 200, after: 400 })
-await typeMath(page, '-3')
+// limitVar = b
+await typeMath(page, 'b')
 await pressTab(page)
-await typeMath(page, 'x+2')
-await pressTab(page)   // out of fraction → eval lower
-await think(page, 300)
-await snap(page, '04_fraction_in_eval')
 
-// Lower = 1
+// approach = \infty  (typed as \infty which KaTeX renders as ∞)
+await typeMath(page, '\\infty')
+await pressTab(page)
+await think(page, 400)
+
+// In limit body — insert integral
+await clickLocator(page, toolbarBtn(page, 0, '∫'), { hover: 250, after: 400 })
+await snap(page, '04_integral_in_limit')
+
+// lower = 1
 await typeMath(page, '1')
 await pressTab(page)
 
-// Upper = ∞ via symbol palette
-await clickLocator(page, toolbarBtn(page, 0, 'Ω'), { hover: 200, after: 350 })
-const paletteOpen = await page.locator('.symbol-popover').isVisible().catch(() => false)
-if (paletteOpen) {
-  const infBtn = page.locator('.symbol-btn').filter({ hasText: '∞' }).first()
-  if (await infBtn.count() > 0) {
-    await clickLocator(page, infBtn, { hover: 120, after: 250 })
-  } else {
-    await page.keyboard.press('Escape')
-    await typeMath(page, '\\infty')
-  }
-} else {
-  await key(page, 'z', { ctrl: true, wait: 200 })
-  await typeMath(page, '\\infty')
-}
-await pressTab(page)   // out of eval bracket
+// upper = b  (finite upper bound — this is what makes it a proper limit definition)
+await typeMath(page, 'b')
+await pressTab(page)
 await think(page, 400)
-await snap(page, '05_eval_bounds_done')
+
+// integrand: fraction 3/(x+2)²
+await clickLocator(page, toolbarBtn(page, 0, '½'), { hover: 250, after: 400 })
+await typeMath(page, '3')
+await pressTab(page)
+await typeMath(page, '(x+2)')
+await key(page, '^', { wait: 150 })
+await typeMath(page, '2')
+await pressTab(page)   // skip: frac.den tail + integrand tail → variable
+
+// variable = x
+await typeMath(page, 'x')
+await pressTab(page)   // skip: limit.body tail → root trailing
+await think(page, 500)
+await snap(page, '05_math_block_1_done')
 
 // ─────────────────────────────────────────────────────────────────────────────
-// TEXT BLOCK 1 — bridge to the limit argument
+// TEXT BLOCK 1
 // ─────────────────────────────────────────────────────────────────────────────
-console.log('\n  [Text 1] Limit argument')
-
+console.log('\n  [Text 1]')
 await addTextBlock(page)
-await snap(page, '06_text_block_added')
-
 await typeText(page, page.locator('.doc-text-area').last(),
-  'As b → ∞, the term −3/(b+2) → 0, leaving:')
+  'The antiderivative of 3∕(x+2)² is −3∕(x+2) + C. Evaluating at the bounds:')
 await think(page, 400)
-await snap(page, '07_text_typed')
+await snap(page, '06_text_1_typed')
 
 // ─────────────────────────────────────────────────────────────────────────────
-// MATH BLOCK 2 — final result
+// MATH BLOCK 2 — = lim_{b→∞} [−3/(x+2)]₁^b
+//
+// Tab trace:
+//   "= " text → limitVar → approach → limit.body → eval.body
+//   → frac.num → frac.den
+//   → [skip: frac.den tail, eval.body tail] → eval.lower
+//   → eval.upper
+//   → [skip: eval tail in limit.body, limit.body tail] → root trailing
 // ─────────────────────────────────────────────────────────────────────────────
-console.log('\n  [Math 2] = 0 - (-1) = 1')
-
+console.log('\n  [Math 2] = lim_{b→∞} [-3/(x+2)]₁^b')
 await addMathBlock(page)
-await snap(page, '08_math_block_2_added')
+await snap(page, '07_math_block_2_added')
 
 await focusMathEditor(page, 1)
 await think(page, 400)
 
-// = 0 - fraction(-3/3) = 1  →  just type the readable form
-await typeMath(page, '= 0 - (')
-await clickLocator(page, toolbarBtn(page, 1, '½'), { hover: 200, after: 300 })
+// "= " before the limit (plain text at root level)
+await typeMath(page, '= ')
+
+// Insert limit
+await clickLocator(page, toolbarBtn(page, 1, 'lim'), { hover: 250, after: 400 })
+
+// limitVar = b
+await typeMath(page, 'b')
+await pressTab(page)
+
+// approach = \infty
+await typeMath(page, '\\infty')
+await pressTab(page)
+await think(page, 300)
+
+// In limit body — insert eval bracket
+await clickLocator(page, toolbarBtn(page, 1, '[·]'), { hover: 250, after: 400 })
+await snap(page, '08_eval_in_limit')
+
+// Eval body: fraction −3/(x+2)
+await clickLocator(page, toolbarBtn(page, 1, '½'), { hover: 200, after: 400 })
 await typeMath(page, '-3')
 await pressTab(page)
-await typeMath(page, '3')
-await pressTab(page)   // out of fraction
-await typeMath(page, ') = 1')
-await think(page, 500)
-await snap(page, '09_final_result')
+await typeMath(page, 'x+2')
+await pressTab(page)   // skip: frac.den tail + eval.body tail → eval.lower
 
-// ── Scroll to top to show full document ───────────────────────────────────────
-console.log('\n  → Showing full document…')
+// lower = 1
+await typeMath(page, '1')
+await pressTab(page)   // → eval.upper
+
+// upper = b  (finite — the limit handles the ∞)
+await typeMath(page, 'b')
+await pressTab(page)   // skip: eval tail + limit.body tail → root trailing
+await think(page, 400)
+await snap(page, '09_math_block_2_done')
+
+// ─────────────────────────────────────────────────────────────────────────────
+// TEXT BLOCK 2
+// ─────────────────────────────────────────────────────────────────────────────
+console.log('\n  [Text 2]')
+await addTextBlock(page)
+await typeText(page, page.locator('.doc-text-area').last(),
+  'As b → ∞, the upper term −3∕(b+2) → 0. The lower bound gives −3∕(1+2) = −1. So:')
+await think(page, 400)
+await snap(page, '10_text_2_typed')
+
+// ─────────────────────────────────────────────────────────────────────────────
+// MATH BLOCK 3 — = 0 − (−1) = 1
+// ─────────────────────────────────────────────────────────────────────────────
+console.log('\n  [Math 3] = 0 − (−1) = 1')
+await addMathBlock(page)
+await snap(page, '11_math_block_3_added')
+
+await focusMathEditor(page, 2)
+await think(page, 500)
+
+// Type the arithmetic step — upper term gave 0, lower term gave −(−1) = 1
+await typeMath(page, '= 0-(-1) = 1')
+await think(page, 600)
+await snap(page, '12_final_result')
+
+// ─────────────────────────────────────────────────────────────────────────────
+// Show full document
+// ─────────────────────────────────────────────────────────────────────────────
+console.log('\n  → Full document view…')
 await page.evaluate(() => window.scrollTo({ top: 0, behavior: 'smooth' }))
 await think(page, 700)
-await snap(page, '10_document_overview_top')
+await snap(page, '13_document_top')
 
 await page.evaluate(() => window.scrollTo({ top: document.body.scrollHeight, behavior: 'smooth' }))
 await think(page, 700)
-await snap(page, '11_document_overview_bottom')
+await snap(page, '14_document_bottom')
 
-// ── Copy full LaTeX ────────────────────────────────────────────────────────────
 await clickLocator(page, page.locator('.doc-export-bar .copy-btn'), { hover: 350, after: 600 })
-await snap(page, '12_latex_copied')
+await snap(page, '15_latex_copied')
 await think(page, 800)
 
 // ─── Finish ───────────────────────────────────────────────────────────────────
-console.log('\n  Closing and finalising video…')
+console.log('\n  Closing…')
 const video = page.video()
 await context.close()
 await browser.close()
@@ -274,7 +333,7 @@ console.log(`  ✅  Video: ${videoPath}`)
 
 await generateReplay(OUT)
 await buildSessionHtml(OUT, videoFile, milestones)
-console.log(`\n🎬  Open in browser:\n   ${path.join(OUT, 'session.html')}\n`)
+console.log(`\n🎬  Open:\n   ${path.join(OUT, 'session.html')}\n`)
 
 // ─────────────────────────────────────────────────────────────────────────────
 
@@ -288,7 +347,7 @@ async function buildSessionHtml(dir, videoFile, milestones) {
 <html lang="en">
 <head>
 <meta charset="utf-8">
-<title>Student Session — TMA4100 Q2 Multi-block</title>
+<title>Student Session — TMA4100 Q2</title>
 <style>
   *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
   body { background: #0f1117; color: #e5e7eb; font-family: ui-monospace, monospace; height: 100vh; display: flex; flex-direction: column; overflow: hidden; }
@@ -313,8 +372,8 @@ async function buildSessionHtml(dir, videoFile, milestones) {
 <body>
 <header>
   <span class="badge">LIVE RECORDING</span>
-  <div><h1>TMA4100 — Oppgave 2 · student solution · multi-block</h1>
-  <p>Eval bracket + text explanation + final result — Playwright recording</p></div>
+  <div><h1>TMA4100 — Oppgave 2 · improper integral · realistic student solution</h1>
+  <p>lim definition → antiderivative → evaluate at b → let b→∞</p></div>
 </header>
 <div id="video-wrap">
   <video src="${videoFile}" controls autoplay muted loop></video>
@@ -326,7 +385,7 @@ async function buildSessionHtml(dir, videoFile, milestones) {
 </div>
 <div id="filmstrip"></div>
 <script>
-const T=JSON.parse(${JSON.stringify(JSON.stringify(frames))})
+const T=${JSON.stringify(frames)}
 const fs=document.getElementById('filmstrip'),ov=document.getElementById('overlay'),oi=document.getElementById('overlay-img'),ol=document.getElementById('overlay-label'),v=document.querySelector('video')
 T.forEach(t=>{const d=document.createElement('div');d.className='thumb';d.innerHTML=\`<img src="\${t.src}" loading="lazy"><div class="thumb-lbl">\${t.label}</div>\`;d.onclick=()=>{oi.src=t.src;ol.textContent=t.label;ov.classList.add('visible');v.pause()};fs.appendChild(d)})
 document.getElementById('overlay-close').onclick=()=>{ov.classList.remove('visible');v.play()}

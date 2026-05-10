@@ -1,5 +1,13 @@
 import katex from 'katex'
+import { useState } from 'react'
 import { ToolGroups, NO_GROUPS, GROUP_META, GroupId } from '../types/toolConfig'
+
+export interface ExamQuestionRef {
+  number: string
+  title: string
+  questionTex: string
+  groups: ToolGroups
+}
 
 // ─── Static KaTeX answer block ────────────────────────────────────────────────
 
@@ -35,7 +43,7 @@ interface Question {
 
 interface CardProps {
   q: Question
-  onTry: (groups: ToolGroups) => void
+  onTry: (ref: ExamQuestionRef) => void
 }
 
 function GroupBadge({ id, active }: { id: GroupId; active: boolean }) {
@@ -48,44 +56,56 @@ function GroupBadge({ id, active }: { id: GroupId; active: boolean }) {
 }
 
 function QuestionCard({ q, onTry }: CardProps) {
+  const [showSolution, setShowSolution] = useState(false)
+
   return (
     <div className="exam-card">
       <div className="exam-card-header">
         <span className="exam-q-number">Oppgave {q.number}</span>
         <span className="exam-q-title">{q.title}</span>
-        <button
-          className="exam-try-btn"
-          onClick={() => onTry(q.suggestedGroups)}
-          title="Open the editor with only the tools needed for this question"
-        >
-          Try in editor →
-        </button>
       </div>
 
       <div className="exam-question-box">
         <KaTeX tex={q.questionTex} />
       </div>
 
-      <div className="exam-tools-used">
-        <span className="exam-tools-label">Tool groups:</span>
-        {(Object.keys(q.suggestedGroups) as GroupId[]).map(id => (
-          <GroupBadge key={id} id={id} active={q.suggestedGroups[id]} />
-        ))}
+      <div className="exam-card-footer">
+        <div className="exam-tools-used">
+          <span className="exam-tools-label">Tools:</span>
+          {(Object.keys(q.suggestedGroups) as GroupId[]).map(id => (
+            <GroupBadge key={id} id={id} active={q.suggestedGroups[id]} />
+          ))}
+        </div>
+        <button
+          className="exam-solution-toggle"
+          onClick={() => setShowSolution(s => !s)}
+        >
+          {showSolution ? '▾ Hide solution' : '▸ Show solution'}
+        </button>
+        <button
+          className="exam-try-btn"
+          onClick={() => onTry({ number: q.number, title: q.title, questionTex: q.questionTex, groups: q.suggestedGroups })}
+          title="Open the editor with only the tools needed for this question"
+        >
+          Try in editor →
+        </button>
       </div>
 
-      <div className="exam-solution">
-        <div className="exam-solution-label">Solution</div>
-        {q.steps.map((s, i) => (
-          <div key={i} className="exam-step">
-            {s.label && <div className="exam-step-label">{s.label}</div>}
-            <KaTeX tex={s.tex} />
+      {showSolution && (
+        <div className="exam-solution">
+          <div className="exam-solution-label">Solution</div>
+          {q.steps.map((s, i) => (
+            <div key={i} className="exam-step">
+              {s.label && <div className="exam-step-label">{s.label}</div>}
+              <KaTeX tex={s.tex} />
+            </div>
+          ))}
+          <div className="exam-answer-box">
+            <span className="exam-answer-label">Answer</span>
+            <KaTeX tex={q.answer} display={false} />
           </div>
-        ))}
-        <div className="exam-answer-box">
-          <span className="exam-answer-label">Answer</span>
-          <KaTeX tex={q.answer} display={false} />
         </div>
-      </div>
+      )}
     </div>
   )
 }
@@ -205,7 +225,7 @@ const QUESTIONS: Question[] = [
 // ─── Page ─────────────────────────────────────────────────────────────────────
 
 interface Props {
-  onTryQuestion: (groups: ToolGroups) => void
+  onTryQuestion: (ref: ExamQuestionRef) => void
 }
 
 export function ExamDemo({ onTryQuestion }: Props) {

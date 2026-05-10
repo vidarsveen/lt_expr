@@ -1,18 +1,24 @@
 import { useState } from 'react'
 import { DocumentEditor } from './components/DocumentEditor'
 import { ToolGroupPicker } from './components/ToolGroupPicker'
-import { ExamDemo } from './pages/ExamDemo'
+import { StudentExamView } from './components/StudentExamView'
+import { ExamDemo, ExamQuestionRef } from './pages/ExamDemo'
 import { ALL_GROUPS, ToolGroups } from './types/toolConfig'
 
 type Tab = 'editor' | 'exam'
 
 export default function App() {
-  const [tab, setTab] = useState<Tab>('editor')
+  const [tab, setTab]               = useState<Tab>('editor')
   const [toolGroups, setToolGroups] = useState<ToolGroups>(ALL_GROUPS)
+  const [activeQuestion, setActiveQuestion] = useState<ExamQuestionRef | null>(null)
 
-  function handleTryQuestion(groups: ToolGroups) {
-    setToolGroups(groups)
-    setTab('editor')
+  function handleTryQuestion(ref: ExamQuestionRef) {
+    setActiveQuestion(ref)
+  }
+
+  function switchTab(t: Tab) {
+    setTab(t)
+    setActiveQuestion(null)
   }
 
   return (
@@ -21,27 +27,36 @@ export default function App() {
       <div className="app-tabs">
         <button
           className={`app-tab ${tab === 'editor' ? 'active' : ''}`}
-          onClick={() => setTab('editor')}
+          onClick={() => switchTab('editor')}
         >
           Free editor
         </button>
         <button
           className={`app-tab ${tab === 'exam' ? 'active' : ''}`}
-          onClick={() => setTab('exam')}
+          onClick={() => switchTab('exam')}
         >
           TMA4100 — 2024 Exam
         </button>
       </div>
 
-      {tab === 'editor' ? (
+      {tab === 'editor' && (
         <div>
           <div style={{ maxWidth: 820, margin: '10px auto', padding: '0 20px' }}>
             <ToolGroupPicker groups={toolGroups} onChange={setToolGroups} />
           </div>
           <DocumentEditor toolGroups={toolGroups} />
         </div>
-      ) : (
+      )}
+
+      {tab === 'exam' && !activeQuestion && (
         <ExamDemo onTryQuestion={handleTryQuestion} />
+      )}
+
+      {tab === 'exam' && activeQuestion && (
+        <StudentExamView
+          question={activeQuestion}
+          onBack={() => setActiveQuestion(null)}
+        />
       )}
     </div>
   )

@@ -1,5 +1,5 @@
 import katex from 'katex'
-import { useCallback, useEffect } from 'react'
+import { useCallback, useEffect, useRef, useState } from 'react'
 import { SlotKey } from '../types/ast'
 import { ALL_GROUPS, ToolGroups } from '../types/toolConfig'
 import { useEditor } from '../hooks/useEditor'
@@ -24,6 +24,18 @@ interface Props {
 }
 
 export function Editor({ toolGroups = ALL_GROUPS, showLatexBar = true, onLatexChange }: Props) {
+  const [showHelp, setShowHelp] = useState(false)
+  const helpRef = useRef<HTMLDivElement>(null)
+
+  useEffect(() => {
+    if (!showHelp) return
+    function onDown(e: MouseEvent) {
+      if (helpRef.current && !helpRef.current.contains(e.target as Node)) setShowHelp(false)
+    }
+    document.addEventListener('pointerdown', onDown)
+    return () => document.removeEventListener('pointerdown', onDown)
+  }, [showHelp])
+
   const {
     state, textareaRef, focusEditor, handleKeyDown,
     insertIntegralCmd, insertFractionCmd, insertSqrtCmd, insertSumCmd, insertPowerCmd,
@@ -110,12 +122,23 @@ export function Editor({ toolGroups = ALL_GROUPS, showLatexBar = true, onLatexCh
         <button className="toolbar-btn" onMouseDown={e => e.preventDefault()}
           onClick={redo} title="Redo (Ctrl+Y)" disabled={!canRedo}>↪</button>
 
-        <span className="toolbar-hint">
-          {toolGroups.calculus && <><kbd>Alt+I</kbd> ∫ &nbsp;·&nbsp; <kbd>Alt+L</kbd> lim &nbsp;·&nbsp; <kbd>Alt+E</kbd> [·] &nbsp;·&nbsp;</>}
-          {toolGroups.algebra  && <><kbd>Alt+F</kbd> ½ &nbsp;·&nbsp; <kbd>Alt+R</kbd> √ &nbsp;·&nbsp; <kbd>^</kbd> xⁿ &nbsp;·&nbsp;</>}
-          {toolGroups.series   && <><kbd>Alt+S</kbd> ∑ &nbsp;·&nbsp;</>}
-          <kbd>Tab</kbd> next &nbsp;·&nbsp; <kbd>←→</kbd> move &nbsp;·&nbsp; <kbd>Ctrl+Z</kbd> undo
-        </span>
+        <div className="toolbar-help" ref={helpRef}>
+          <button
+            className="toolbar-btn toolbar-help-btn"
+            onMouseDown={e => e.preventDefault()}
+            onClick={() => setShowHelp(h => !h)}
+            title="Keyboard shortcuts"
+          >?</button>
+          {showHelp && (
+            <div className="toolbar-help-popover">
+              <div className="help-popover-title">Keyboard shortcuts</div>
+              {toolGroups.calculus && <div><kbd>Alt+I</kbd> integral &nbsp;·&nbsp; <kbd>Alt+L</kbd> limit &nbsp;·&nbsp; <kbd>Alt+E</kbd> eval [·]</div>}
+              {toolGroups.algebra  && <div><kbd>Alt+F</kbd> fraction &nbsp;·&nbsp; <kbd>Alt+R</kbd> √ &nbsp;·&nbsp; <kbd>^</kbd> power</div>}
+              {toolGroups.series   && <div><kbd>Alt+S</kbd> sum</div>}
+              <div><kbd>Tab</kbd> next slot &nbsp;·&nbsp; <kbd>← →</kbd> move &nbsp;·&nbsp; <kbd>Ctrl+Z/Y</kbd> undo/redo</div>
+            </div>
+          )}
+        </div>
       </div>
 
       <div className="editor-display" onClick={handleEditorClick}>
