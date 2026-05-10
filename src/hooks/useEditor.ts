@@ -1,4 +1,4 @@
-import { useCallback, useReducer, useRef } from 'react'
+import { useCallback, useEffect, useReducer, useRef } from 'react'
 import { Cursor, SequenceNode } from '../types/ast'
 import {
   makeSequence,
@@ -127,8 +127,39 @@ export function useEditor() {
   const [state, dispatch] = useReducer(reducer, undefined, createInitialState)
   const textareaRef = useRef<HTMLTextAreaElement>(null)
 
+  // Mobile keyboards (Android) fire keydown with key='Unidentified' for printable
+  // characters. We use a sentinel zero-width-space so that:
+  //   - typing a char  → value becomes '​<char>'  → we extract and dispatch INSERT_CHAR
+  //   - backspace       → value becomes ''              → we dispatch DELETE_CHAR
+  // Desktop keyboards call e.preventDefault() in onKeyDown, which suppresses the
+  // input event, so only one path fires per keystroke.
+  useEffect(() => {
+    const el = textareaRef.current
+    if (!el) return
+    el.value = '​'
+
+    const onInput = () => {
+      const val = el.value
+      if (val.length > 1) {
+        const newChars = val.replace('​', '')
+        for (const ch of newChars) {
+          dispatch({ type: 'INSERT_CHAR', char: ch })
+        }
+      } else if (val === '') {
+        dispatch({ type: 'DELETE_CHAR' })
+      }
+      el.value = '​'
+    }
+
+    el.addEventListener('input', onInput)
+    return () => el.removeEventListener('input', onInput)
+  }, [dispatch])
+
   const focusEditor = useCallback(() => {
-    textareaRef.current?.focus()
+    const el = textareaRef.current
+    if (!el) return
+    if (el.value !== '​') el.value = '​'
+    el.focus()
   }, [])
 
   const handleKeyDown = useCallback((e: React.KeyboardEvent<HTMLTextAreaElement>) => {
@@ -189,7 +220,10 @@ export function useEditor() {
 
   const setCursor = useCallback((cursor: Cursor) => {
     dispatch({ type: 'SET_CURSOR', cursor })
-    textareaRef.current?.focus()
+    const el = textareaRef.current
+    if (!el) return
+    if (el.value !== '​') el.value = '​'
+    el.focus()
   }, [])
 
   const insertIntegralCmd = useCallback(() => {
