@@ -146,11 +146,10 @@ export function Editor({ toolGroups = ALL_GROUPS, showLatexBar = true, onLatexCh
           ref={textareaRef}
           className="editor-textarea"
           onKeyDown={handleKeyDown}
-          onChange={() => {}}
-          value=""
           aria-label="Math editor input"
           autoCapitalize="off"
           autoCorrect="off"
+          autoComplete="off"
           spellCheck={false}
         />
         <div
