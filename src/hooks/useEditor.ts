@@ -266,6 +266,16 @@ export function useEditor() {
     textareaRef.current?.focus()
   }, [])
 
+  const tabForwardCmd = useCallback(() => {
+    dispatch({ type: 'TAB', shift: false })
+    textareaRef.current?.focus()
+  }, [])
+
+  const tabBackwardCmd = useCallback(() => {
+    dispatch({ type: 'TAB', shift: true })
+    textareaRef.current?.focus()
+  }, [])
+
   const undo = useCallback(() => {
     dispatch({ type: 'UNDO' })
     textareaRef.current?.focus()
@@ -293,6 +303,8 @@ export function useEditor() {
     insertLimitCmd,
     insertEvalCmd,
     insertTextCmd,
+    tabForwardCmd,
+    tabBackwardCmd,
     undo,
     redo,
     canUndo,

@@ -39,7 +39,9 @@ export function Editor({ toolGroups = ALL_GROUPS, showLatexBar = true, onLatexCh
   const {
     state, textareaRef, focusEditor, handleKeyDown,
     insertIntegralCmd, insertFractionCmd, insertSqrtCmd, insertSumCmd, insertPowerCmd,
-    insertLimitCmd, insertEvalCmd, insertTextCmd, setCursor, undo, redo, canUndo, canRedo,
+    insertLimitCmd, insertEvalCmd, insertTextCmd, setCursor,
+    tabForwardCmd, tabBackwardCmd,
+    undo, redo, canUndo, canRedo,
   } = useEditor()
 
   const handleEditorClick = useCallback((e: React.MouseEvent<HTMLDivElement>) => {
@@ -114,6 +116,13 @@ export function Editor({ toolGroups = ALL_GROUPS, showLatexBar = true, onLatexCh
             showSymbols={toolGroups.symbols}
           />
         </>}
+
+        {/* ── Slot navigation (always shown) ── */}
+        <div className="toolbar-separator" />
+        <button className="toolbar-btn" onMouseDown={e => e.preventDefault()}
+          onClick={tabBackwardCmd} title="Previous slot (Shift+Tab)">⇤</button>
+        <button className="toolbar-btn" onMouseDown={e => e.preventDefault()}
+          onClick={tabForwardCmd} title="Next slot (Tab)">⇥</button>
 
         {/* ── Edit controls (always shown) ── */}
         <div className="toolbar-separator" />
