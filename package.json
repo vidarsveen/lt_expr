@@ -1,0 +1,36 @@
+{
+  "name": "latexeditor",
+  "private": true,
+  "version": "0.1.0",
+  "type": "module",
+  "scripts": {
+    "dev": "vite",
+    "build": "tsc && vite build",
+    "preview": "vite preview",
+    "test": "vitest run",
+    "test:watch": "vitest",
+    "test:e2e": "node tests/e2e/run.mjs",
+    "visual": "node tests/e2e/visual.mjs",
+    "visual:exam": "node tests/e2e/visual-exam.mjs",
+    "replay": "node tests/e2e/replay-gen.mjs",
+    "student": "node tests/e2e/student-session.mjs",
+    "student:multi": "node tests/e2e/student-multi.mjs"
+  },
+  "dependencies": {
+    "katex": "^0.16.11",
+    "react": "^18.3.1",
+    "react-dom": "^18.3.1"
+  },
+  "devDependencies": {
+    "@types/katex": "^0.16.7",
+    "@types/react": "^18.3.1",
+    "@types/react-dom": "^18.3.1",
+    "@vitejs/plugin-react": "^4.3.1",
+    "@vitest/ui": "^4.1.5",
+    "jsdom": "^28.1.0",
+    "playwright": "^1.59.1",
+    "typescript": "^5.5.3",
+    "vite": "^5.4.1",
+    "vitest": "^4.1.5"
+  }
+}
