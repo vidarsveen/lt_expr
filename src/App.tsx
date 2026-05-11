@@ -5,7 +5,7 @@ import { StudentExamView } from './components/StudentExamView'
 import { ExamDemo, ExamQuestionRef } from './pages/ExamDemo'
 import { ALL_GROUPS, ToolGroups } from './types/toolConfig'
 
-const APP_VERSION = 'v0.3.0'
+const APP_VERSION = 'v0.4.0'
 
 type Tab = 'editor' | 'exam'
 
