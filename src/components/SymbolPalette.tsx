@@ -41,10 +41,10 @@ const SYMBOLS: Symbol[] = [
   { label: '∅', latex: '\\emptyset',title: 'empty set' },
   { label: '→', latex: '\\to',      title: 'arrow right' },
   { label: '⇒', latex: '\\Rightarrow', title: 'implies' },
-  { label: '⇔', latex: '\\Leftrightarrow', title: 'iff' },
+  { label: '⇔', latex: '\\Leftrightarrow', title: 'if and only if' },
   { label: '·', latex: '\\cdot',    title: 'dot product' },
   { label: '×', latex: '\\times',   title: 'times' },
-  { label: '∂', latex: '\\partial', title: 'partial' },
+  { label: '∂', latex: '\\partial', title: 'partial derivative' },
   { label: '∇', latex: '\\nabla',   title: 'nabla' },
 ]
 
@@ -85,46 +85,69 @@ export function SymbolPalette({ onInsert, showGreek = true, showSymbols = true }
         onMouseDown={e => e.preventDefault()}
         onClick={() => setOpen(o => !o)}
         title="Insert symbol"
+        aria-label="Insert Greek letter or math symbol"
+        aria-expanded={open}
+        aria-haspopup="dialog"
       >
         Ω
       </button>
       {open && (
-        <div className="symbol-popover">
-          {showTabs && (
-          <div className="symbol-tabs">
-            <button
-              className={`symbol-tab ${activeTab === 'greek' ? 'active' : ''}`}
-              onMouseDown={e => e.preventDefault()}
-              onClick={() => setTab('greek')}
-            >
-              Greek
-            </button>
-            <button
-              className={`symbol-tab ${activeTab === 'symbols' ? 'active' : ''}`}
-              onMouseDown={e => e.preventDefault()}
-              onClick={() => setTab('symbols')}
-            >
-              Symbols
-            </button>
+        <>
+          {/* Backdrop — visible only on mobile, closes the palette on tap */}
+          <div
+            className="symbol-backdrop"
+            aria-hidden="true"
+            onPointerDown={() => setOpen(false)}
+          />
+          <div
+            className="symbol-popover"
+            role="dialog"
+            aria-label="Insert symbol"
+            aria-modal="true"
+          >
+            {showTabs && (
+              <div className="symbol-tabs" role="tablist" aria-label="Symbol categories">
+                <button
+                  className={`symbol-tab ${activeTab === 'greek' ? 'active' : ''}`}
+                  onMouseDown={e => e.preventDefault()}
+                  onClick={() => setTab('greek')}
+                  role="tab"
+                  aria-selected={activeTab === 'greek'}
+                >
+                  Greek
+                </button>
+                <button
+                  className={`symbol-tab ${activeTab === 'symbols' ? 'active' : ''}`}
+                  onMouseDown={e => e.preventDefault()}
+                  onClick={() => setTab('symbols')}
+                  role="tab"
+                  aria-selected={activeTab === 'symbols'}
+                >
+                  Symbols
+                </button>
+              </div>
+            )}
+            {!showTabs && (
+              <div className="symbol-single-label" aria-hidden="true">
+                {activeTab === 'greek' ? 'Greek' : 'Symbols'}
+              </div>
+            )}
+            <div className="symbol-grid" role="group" aria-label={activeTab === 'greek' ? 'Greek letters' : 'Math symbols'}>
+              {symbols.map(s => (
+                <button
+                  key={s.latex}
+                  className="symbol-btn"
+                  title={s.title}
+                  aria-label={`Insert ${s.title} (${s.label})`}
+                  onMouseDown={e => e.preventDefault()}
+                  onClick={() => { onInsert(s.latex); setOpen(false) }}
+                >
+                  {s.label}
+                </button>
+              ))}
+            </div>
           </div>
-          )}
-          {!showTabs && (
-            <div className="symbol-single-label">{activeTab === 'greek' ? 'Greek' : 'Symbols'}</div>
-          )}
-          <div className="symbol-grid">
-            {symbols.map(s => (
-              <button
-                key={s.latex}
-                className="symbol-btn"
-                title={s.title}
-                onMouseDown={e => e.preventDefault()}
-                onClick={() => { onInsert(s.latex); setOpen(false) }}
-              >
-                {s.label}
-              </button>
-            ))}
-          </div>
-        </div>
+        </>
       )}
     </div>
   )

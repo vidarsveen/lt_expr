@@ -9,10 +9,15 @@ interface TextBlockProps {
   block: { type: 'text'; id: string; content: string }
   onChange: (id: string, content: string) => void
   onDelete: (id: string) => void
+  onAutoDelete: (id: string) => void
   canDelete: boolean
+  pendingDelete: boolean
+  focusOnMount: boolean
 }
 
-function TextBlockView({ block, onChange, onDelete, canDelete }: TextBlockProps) {
+function TextBlockView({
+  block, onChange, onDelete, onAutoDelete, canDelete, pendingDelete, focusOnMount,
+}: TextBlockProps) {
   const ref = useRef<HTMLTextAreaElement>(null)
 
   // Auto-grow textarea to content height
@@ -23,6 +28,15 @@ function TextBlockView({ block, onChange, onDelete, canDelete }: TextBlockProps)
     el.style.height = `${el.scrollHeight}px`
   }, [block.content])
 
+  // Focus when newly inserted
+  useEffect(() => {
+    if (focusOnMount) ref.current?.focus()
+  }, [focusOnMount])
+
+  function handleBlur() {
+    if (canDelete && !block.content.trim()) onAutoDelete(block.id)
+  }
+
   return (
     <div className="doc-block doc-block--text">
       <textarea
@@ -30,12 +44,19 @@ function TextBlockView({ block, onChange, onDelete, canDelete }: TextBlockProps)
         className="doc-text-area"
         value={block.content}
         onChange={e => onChange(block.id, e.target.value)}
+        onBlur={handleBlur}
         placeholder="Write text here — explanation, reasoning, conclusion…"
         rows={1}
+        aria-label="Text answer"
       />
       {canDelete && (
-        <button className="doc-block-delete" onClick={() => onDelete(block.id)} title="Remove block">
-          ×
+        <button
+          className={`doc-block-delete${pendingDelete ? ' pending' : ''}`}
+          onClick={() => onDelete(block.id)}
+          title={pendingDelete ? 'Click again to delete' : 'Remove block'}
+          aria-label={pendingDelete ? 'Confirm: remove text block' : 'Remove text block'}
+        >
+          {pendingDelete ? 'Delete?' : '×'}
         </button>
       )}
     </div>
@@ -50,9 +71,13 @@ interface MathBlockProps {
   onLatexChange: (id: string, latex: string) => void
   onDelete: (id: string) => void
   canDelete: boolean
+  pendingDelete: boolean
+  focusOnMount: boolean
 }
 
-const MathBlockView = memo(function MathBlockView({ id, toolGroups, onLatexChange, onDelete, canDelete }: MathBlockProps) {
+const MathBlockView = memo(function MathBlockView({
+  id, toolGroups, onLatexChange, onDelete, canDelete, pendingDelete, focusOnMount,
+}: MathBlockProps) {
   const handleLatexChange = useCallback(
     (latex: string) => onLatexChange(id, latex),
     [id, onLatexChange],
@@ -64,10 +89,16 @@ const MathBlockView = memo(function MathBlockView({ id, toolGroups, onLatexChang
         toolGroups={toolGroups}
         showLatexBar={false}
         onLatexChange={handleLatexChange}
+        autoFocus={focusOnMount}
       />
       {canDelete && (
-        <button className="doc-block-delete doc-block-delete--math" onClick={() => onDelete(id)} title="Remove block">
-          ×
+        <button
+          className={`doc-block-delete doc-block-delete--math${pendingDelete ? ' pending' : ''}`}
+          onClick={() => onDelete(id)}
+          title={pendingDelete ? 'Click again to delete' : 'Remove block'}
+          aria-label={pendingDelete ? 'Confirm: remove math block' : 'Remove math block'}
+        >
+          {pendingDelete ? 'Delete?' : '×'}
         </button>
       )}
     </div>
@@ -83,11 +114,25 @@ interface GapProps {
 
 function BlockGap({ onInsertText, onInsertMath }: GapProps) {
   return (
-    <div className="block-gap">
+    <div className="block-gap" aria-hidden="true">
       <div className="block-gap-line" />
       <div className="block-gap-buttons">
-        <button className="block-gap-btn" onClick={onInsertText}>+ Text</button>
-        <button className="block-gap-btn" onClick={onInsertMath}>+ Math</button>
+        <button
+          className="block-gap-btn"
+          onClick={onInsertText}
+          aria-label="Insert text block"
+          tabIndex={-1}
+        >
+          + Text
+        </button>
+        <button
+          className="block-gap-btn"
+          onClick={onInsertMath}
+          aria-label="Insert math block"
+          tabIndex={-1}
+        >
+          + Math
+        </button>
       </div>
       <div className="block-gap-line" />
     </div>
@@ -99,32 +144,18 @@ function BlockGap({ onInsertText, onInsertMath }: GapProps) {
 interface Props {
   toolGroups?: ToolGroups
   examMode?: boolean
+  onChange?: (latex: string) => void
 }
 
-export function DocumentEditor({ toolGroups = ALL_GROUPS, examMode = false }: Props) {
+export function DocumentEditor({ toolGroups = ALL_GROUPS, examMode = false, onChange }: Props) {
   const [blocks, setBlocks] = useState<DocumentBlock[]>(() => [makeMathBlock()])
   const [mathLatex, setMathLatex] = useState<Record<string, string>>({})
+  const [focusBlockId, setFocusBlockId] = useState<string | null>(null)
+  const [pendingDeleteId, setPendingDeleteId] = useState<string | null>(null)
+  const [copyDone, setCopyDone] = useState(false)
+  const pendingDeleteTimer = useRef<ReturnType<typeof setTimeout> | null>(null)
 
   const canDelete = blocks.length > 1
-
-  // ── Block mutations ──────────────────────────────────────────────────────────
-
-  function insertAfter(idx: number, block: DocumentBlock) {
-    setBlocks(prev => [...prev.slice(0, idx + 1), block, ...prev.slice(idx + 1)])
-  }
-
-  function deleteBlock(id: string) {
-    setBlocks(prev => prev.filter(b => b.id !== id))
-    setMathLatex(prev => { const n = { ...prev }; delete n[id]; return n })
-  }
-
-  function updateText(id: string, content: string) {
-    setBlocks(prev => prev.map(b => b.id === id ? { ...b, content } as typeof b : b))
-  }
-
-  const handleLatexChange = useCallback((id: string, latex: string) => {
-    setMathLatex(prev => ({ ...prev, [id]: latex }))
-  }, [])
 
   // ── Full document LaTeX export ───────────────────────────────────────────────
 
@@ -137,6 +168,52 @@ export function DocumentEditor({ toolGroups = ALL_GROUPS, examMode = false }: Pr
     .filter(Boolean)
     .join('\n\n')
 
+  useEffect(() => { onChange?.(fullLatex) }, [fullLatex, onChange])
+
+  // ── Block mutations ──────────────────────────────────────────────────────────
+
+  function insertAfter(idx: number, block: DocumentBlock) {
+    setFocusBlockId(block.id)
+    setBlocks(prev => [...prev.slice(0, idx + 1), block, ...prev.slice(idx + 1)])
+  }
+
+  const handleDelete = useCallback((id: string) => {
+    if (pendingDeleteId !== id) {
+      if (pendingDeleteTimer.current) clearTimeout(pendingDeleteTimer.current)
+      setPendingDeleteId(id)
+      pendingDeleteTimer.current = setTimeout(() => setPendingDeleteId(null), 2000)
+    } else {
+      if (pendingDeleteTimer.current) clearTimeout(pendingDeleteTimer.current)
+      setPendingDeleteId(null)
+      setBlocks(prev => prev.filter(b => b.id !== id))
+      setMathLatex(prev => { const n = { ...prev }; delete n[id]; return n })
+    }
+  }, [pendingDeleteId])
+
+  const handleAutoDelete = useCallback((id: string) => {
+    setBlocks(prev => {
+      if (prev.length <= 1) return prev
+      return prev.filter(b => b.id !== id)
+    })
+    setMathLatex(prev => { const n = { ...prev }; delete n[id]; return n })
+  }, [])
+
+  function updateText(id: string, content: string) {
+    setBlocks(prev => prev.map(b => b.id === id ? { ...b, content } as typeof b : b))
+  }
+
+  const handleLatexChange = useCallback((id: string, latex: string) => {
+    setMathLatex(prev => ({ ...prev, [id]: latex }))
+  }, [])
+
+  // ── Copy with feedback ───────────────────────────────────────────────────────
+
+  function handleCopy() {
+    navigator.clipboard.writeText(fullLatex)
+    setCopyDone(true)
+    setTimeout(() => setCopyDone(false), 2000)
+  }
+
   // ── Render ───────────────────────────────────────────────────────────────────
 
   return (
@@ -147,16 +224,21 @@ export function DocumentEditor({ toolGroups = ALL_GROUPS, examMode = false }: Pr
             <TextBlockView
               block={block}
               onChange={updateText}
-              onDelete={deleteBlock}
+              onDelete={handleDelete}
+              onAutoDelete={handleAutoDelete}
               canDelete={canDelete}
+              pendingDelete={pendingDeleteId === block.id}
+              focusOnMount={focusBlockId === block.id}
             />
           ) : (
             <MathBlockView
               id={block.id}
               toolGroups={toolGroups}
               onLatexChange={handleLatexChange}
-              onDelete={deleteBlock}
+              onDelete={handleDelete}
               canDelete={canDelete}
+              pendingDelete={pendingDeleteId === block.id}
+              focusOnMount={focusBlockId === block.id}
             />
           )}
           <BlockGap
@@ -168,12 +250,16 @@ export function DocumentEditor({ toolGroups = ALL_GROUPS, examMode = false }: Pr
 
       {examMode ? (
         <div className="exam-copy-bar">
+          <span className="sr-only" aria-live="polite" aria-atomic="true">
+            {copyDone ? 'Answer copied to clipboard' : ''}
+          </span>
           <button
-            className="exam-copy-btn"
-            onClick={() => navigator.clipboard.writeText(fullLatex)}
+            className={`exam-copy-btn${copyDone ? ' copied' : ''}`}
+            onClick={handleCopy}
             disabled={!fullLatex}
+            aria-label="Copy your answer as LaTeX to clipboard"
           >
-            Copy answer as LaTeX
+            {copyDone ? '✓ Copied!' : 'Copy answer as LaTeX'}
           </button>
         </div>
       ) : (

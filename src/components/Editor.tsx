@@ -21,9 +21,10 @@ interface Props {
   toolGroups?: ToolGroups
   showLatexBar?: boolean
   onLatexChange?: (latex: string) => void
+  autoFocus?: boolean
 }
 
-export function Editor({ toolGroups = ALL_GROUPS, showLatexBar = true, onLatexChange }: Props) {
+export function Editor({ toolGroups = ALL_GROUPS, showLatexBar = true, onLatexChange, autoFocus }: Props) {
   const [showHelp, setShowHelp] = useState(false)
   const helpRef = useRef<HTMLDivElement>(null)
 
@@ -43,6 +44,12 @@ export function Editor({ toolGroups = ALL_GROUPS, showLatexBar = true, onLatexCh
     tabForwardCmd, tabBackwardCmd,
     undo, redo, canUndo, canRedo,
   } = useEditor()
+
+  // Auto-focus when mounted as a newly inserted block
+  useEffect(() => {
+    if (autoFocus) focusEditor()
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [])
 
   const handleEditorClick = useCallback((e: React.MouseEvent<HTMLDivElement>) => {
     const target = e.target as Element
@@ -77,39 +84,57 @@ export function Editor({ toolGroups = ALL_GROUPS, showLatexBar = true, onLatexCh
 
   return (
     <div className="editor-wrapper">
-      <div className="editor-toolbar">
+      <div
+        className="editor-toolbar"
+        role="toolbar"
+        aria-label="Math formatting tools"
+      >
 
         {/* ── Calculus group ── */}
         {toolGroups.calculus && <>
           <button className="toolbar-btn" onMouseDown={e => e.preventDefault()}
-            onClick={insertIntegralCmd} title="Insert integral (Alt+I)">∫</button>
+            onClick={insertIntegralCmd}
+            title="Insert integral (Alt+I)"
+            aria-label="Insert integral">∫</button>
           <button className="toolbar-btn toolbar-btn--lim" onMouseDown={e => e.preventDefault()}
-            onClick={insertLimitCmd} title="Insert limit (Alt+L)">lim</button>
+            onClick={insertLimitCmd}
+            title="Insert limit (Alt+L)"
+            aria-label="Insert limit">lim</button>
           <button className="toolbar-btn toolbar-btn--lim" onMouseDown={e => e.preventDefault()}
-            onClick={insertEvalCmd} title="Insert evaluated-at brackets (Alt+E)">[·]</button>
+            onClick={insertEvalCmd}
+            title="Insert evaluated-at brackets (Alt+E)"
+            aria-label="Insert evaluated-at brackets">[·]</button>
         </>}
 
         {/* ── Algebra group ── */}
         {toolGroups.algebra && <>
-          {(toolGroups.calculus) && <div className="toolbar-separator" />}
+          {(toolGroups.calculus) && <div className="toolbar-separator" aria-hidden="true" />}
           <button className="toolbar-btn" onMouseDown={e => e.preventDefault()}
-            onClick={insertFractionCmd} title="Insert fraction (Alt+F)">½</button>
+            onClick={insertFractionCmd}
+            title="Insert fraction (Alt+F)"
+            aria-label="Insert fraction">½</button>
           <button className="toolbar-btn" onMouseDown={e => e.preventDefault()}
-            onClick={insertSqrtCmd} title="Insert square root (Alt+R)">√</button>
+            onClick={insertSqrtCmd}
+            title="Insert square root (Alt+R)"
+            aria-label="Insert square root">√</button>
           <button className="toolbar-btn" onMouseDown={e => e.preventDefault()}
-            onClick={insertPowerCmd} title="Insert power (^)">xⁿ</button>
+            onClick={insertPowerCmd}
+            title="Insert power (^)"
+            aria-label="Insert power">xⁿ</button>
         </>}
 
         {/* ── Series group ── */}
         {toolGroups.series && <>
-          {(toolGroups.calculus || toolGroups.algebra) && <div className="toolbar-separator" />}
+          {(toolGroups.calculus || toolGroups.algebra) && <div className="toolbar-separator" aria-hidden="true" />}
           <button className="toolbar-btn" onMouseDown={e => e.preventDefault()}
-            onClick={insertSumCmd} title="Insert sum (Alt+S)">∑</button>
+            onClick={insertSumCmd}
+            title="Insert sum (Alt+S)"
+            aria-label="Insert sum">∑</button>
         </>}
 
         {/* ── Symbol palette ── */}
         {showSymbolBtn && <>
-          {(toolGroups.calculus || toolGroups.algebra || toolGroups.series) && <div className="toolbar-separator" />}
+          {(toolGroups.calculus || toolGroups.algebra || toolGroups.series) && <div className="toolbar-separator" aria-hidden="true" />}
           <SymbolPalette
             onInsert={insertTextCmd}
             showGreek={toolGroups.greek}
@@ -118,18 +143,28 @@ export function Editor({ toolGroups = ALL_GROUPS, showLatexBar = true, onLatexCh
         </>}
 
         {/* ── Slot navigation (always shown) ── */}
-        <div className="toolbar-separator" />
+        <div className="toolbar-separator" aria-hidden="true" />
         <button className="toolbar-btn" onMouseDown={e => e.preventDefault()}
-          onClick={tabBackwardCmd} title="Previous slot (Shift+Tab)">⇤</button>
+          onClick={tabBackwardCmd}
+          title="Previous slot (Shift+Tab)"
+          aria-label="Move to previous slot">⇤</button>
         <button className="toolbar-btn" onMouseDown={e => e.preventDefault()}
-          onClick={tabForwardCmd} title="Next slot (Tab)">⇥</button>
+          onClick={tabForwardCmd}
+          title="Next slot (Tab)"
+          aria-label="Move to next slot">⇥</button>
 
         {/* ── Edit controls (always shown) ── */}
-        <div className="toolbar-separator" />
+        <div className="toolbar-separator" aria-hidden="true" />
         <button className="toolbar-btn" onMouseDown={e => e.preventDefault()}
-          onClick={undo} title="Undo (Ctrl+Z)" disabled={!canUndo}>↩</button>
+          onClick={undo}
+          title="Undo (Ctrl+Z)"
+          aria-label="Undo"
+          disabled={!canUndo}>↩</button>
         <button className="toolbar-btn" onMouseDown={e => e.preventDefault()}
-          onClick={redo} title="Redo (Ctrl+Y)" disabled={!canRedo}>↪</button>
+          onClick={redo}
+          title="Redo (Ctrl+Y)"
+          aria-label="Redo"
+          disabled={!canRedo}>↪</button>
 
         <div className="toolbar-help" ref={helpRef}>
           <button
@@ -137,9 +172,12 @@ export function Editor({ toolGroups = ALL_GROUPS, showLatexBar = true, onLatexCh
             onMouseDown={e => e.preventDefault()}
             onClick={() => setShowHelp(h => !h)}
             title="Keyboard shortcuts"
+            aria-label="Show keyboard shortcuts"
+            aria-expanded={showHelp}
+            aria-haspopup="true"
           >?</button>
           {showHelp && (
-            <div className="toolbar-help-popover">
+            <div className="toolbar-help-popover" role="tooltip">
               <div className="help-popover-title">Keyboard shortcuts</div>
               {toolGroups.calculus && <div><kbd>Alt+I</kbd> integral &nbsp;·&nbsp; <kbd>Alt+L</kbd> limit &nbsp;·&nbsp; <kbd>Alt+E</kbd> eval [·]</div>}
               {toolGroups.algebra  && <div><kbd>Alt+F</kbd> fraction &nbsp;·&nbsp; <kbd>Alt+R</kbd> √ &nbsp;·&nbsp; <kbd>^</kbd> power</div>}
@@ -150,7 +188,11 @@ export function Editor({ toolGroups = ALL_GROUPS, showLatexBar = true, onLatexCh
         </div>
       </div>
 
-      <div className="editor-display" onClick={handleEditorClick}>
+      <div
+        className="editor-display"
+        onClick={handleEditorClick}
+        aria-label="Math expression editor — click to focus"
+      >
         <textarea
           ref={textareaRef}
           className="editor-textarea"
@@ -163,20 +205,22 @@ export function Editor({ toolGroups = ALL_GROUPS, showLatexBar = true, onLatexCh
         />
         <div
           className="editor-katex"
+          aria-hidden="true"
           dangerouslySetInnerHTML={{ __html: renderedHtml }}
         />
       </div>
 
       {showLatexBar && (
-        <div className="editor-latex-output">
+        <div className="editor-latex-output" aria-label="LaTeX output">
           <span className="latex-label">LaTeX</span>
-          <code className="latex-code">
+          <code className="latex-code" aria-live="polite" aria-atomic="true">
             {exportLatex || <em>start typing…</em>}
           </code>
           <button
             className="copy-btn"
             onClick={() => navigator.clipboard.writeText(exportLatex)}
             disabled={!exportLatex}
+            aria-label="Copy LaTeX to clipboard"
           >
             Copy
           </button>
