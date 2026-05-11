@@ -1,7 +1,7 @@
 import { useState, useRef, useEffect, useCallback, memo } from 'react'
 import { DocumentBlock, makeTextBlock, makeMathBlock } from '../types/document'
 import { ToolGroups, ALL_GROUPS } from '../types/toolConfig'
-import { Editor } from './Editor'
+import { MathLiveEditor } from './MathLiveEditor'
 
 // ─── Text block ───────────────────────────────────────────────────────────────
 
@@ -85,7 +85,7 @@ const MathBlockView = memo(function MathBlockView({
 
   return (
     <div className="doc-block doc-block--math">
-      <Editor
+      <MathLiveEditor
         toolGroups={toolGroups}
         showLatexBar={false}
         onLatexChange={handleLatexChange}

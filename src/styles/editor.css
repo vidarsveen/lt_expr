@@ -261,6 +261,49 @@ body {
   cursor: default;
 }
 
+/* ── MathLive field ─────────────────────────────────────────────────────────── */
+
+.mathlive-wrapper {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  max-width: 820px;
+  margin: 48px auto;
+  padding: 0 20px;
+}
+
+/* The <math-field> custom element */
+math-field {
+  width: 100%;
+  min-height: 90px;
+  padding: 20px 28px;
+  border: 2px solid #dde1e7;
+  border-radius: 10px;
+  font-size: 1.2rem;
+  background: #fff;
+  cursor: text;
+  --primary-color: #4a8fd4;
+  --caret-color: #1a1a1a;
+  --selection-background-color: rgba(74, 143, 212, 0.22);
+  box-sizing: border-box;
+  transition: border-color 0.15s;
+}
+
+math-field:focus-within {
+  border-color: #4a8fd4;
+  box-shadow: 0 0 0 3px rgba(74, 143, 212, 0.14);
+  outline: none;
+}
+
+/* Function-name buttons in toolbar (sin, cos, ln) */
+.toolbar-btn--fn {
+  font-size: 0.85rem;
+  font-family: 'Georgia', serif;
+  font-style: italic;
+  letter-spacing: -0.02em;
+  padding: 2px 10px;
+}
+
 /* ── Document editor ─────────────────────────────────────────────────────────── */
 
 .document-editor {
@@ -931,6 +974,31 @@ body {
   padding: 0;
 }
 
+/* Exam mode: MathLive wrapper compact */
+.exam-mode .mathlive-wrapper {
+  margin: 0;
+  padding: 0;
+  gap: 0;
+}
+
+/* Exam mode: field invisible until focused */
+.exam-mode math-field {
+  border-color: transparent;
+  background: transparent;
+  box-shadow: none;
+  min-height: 44px;
+  padding: 6px 4px;
+  transition: border-color 0.15s, background 0.15s, padding 0.15s, min-height 0.15s;
+}
+
+.exam-mode math-field:focus-within {
+  border-color: #4a8fd4;
+  background: #fff;
+  box-shadow: 0 0 0 3px rgba(74, 143, 212, 0.14);
+  min-height: 90px;
+  padding: 20px 28px;
+}
+
 /* Compact block spacing */
 .exam-mode .doc-block {
   margin: 0;
@@ -1217,6 +1285,18 @@ body {
   /* Document editor padding */
   .document-editor {
     padding: 0 4px 32px;
+  }
+
+  /* MathLive field on mobile */
+  .mathlive-wrapper {
+    margin: 16px auto;
+    padding: 0 12px;
+  }
+
+  math-field {
+    font-size: 1.1rem;
+    padding: 14px 16px;
+    min-height: 70px;
   }
 
   /* Exam demo page */
