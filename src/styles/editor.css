@@ -152,6 +152,20 @@ body {
   width: 1px;
   height: 1px;
   pointer-events: none;
+  font-size: 16px; /* prevent iOS auto-zoom on focus */
+}
+
+/* Screen-reader-only utility */
+.sr-only {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  margin: -1px;
+  overflow: hidden;
+  clip: rect(0,0,0,0);
+  white-space: nowrap;
+  border-width: 0;
 }
 
 /* KaTeX output container */
@@ -310,30 +324,48 @@ body {
   position: absolute;
   top: 8px;
   right: 6px;
-  width: 22px;
-  height: 22px;
+  width: 28px;
+  height: 28px;
   display: flex;
   align-items: center;
   justify-content: center;
   font-size: 1rem;
   line-height: 1;
-  border: none;
+  border: 1px solid transparent;
   border-radius: 50%;
   background: transparent;
-  color: #ccc;
+  color: #bbb;
   cursor: pointer;
   opacity: 0;
-  transition: opacity 0.15s, background 0.12s, color 0.12s;
+  transition: opacity 0.15s, background 0.12s, color 0.12s, border-color 0.12s, border-radius 0.12s, width 0.12s;
   padding: 0;
+  white-space: nowrap;
+  overflow: hidden;
 }
 
-.doc-block:hover .doc-block-delete {
+.doc-block:hover .doc-block-delete,
+.doc-block:focus-within .doc-block-delete {
   opacity: 1;
 }
 
 .doc-block-delete:hover {
   background: #fee;
   color: #c0392b;
+  border-color: #f5c5c5;
+}
+
+/* Two-step delete: first click arms the button */
+.doc-block-delete.pending {
+  opacity: 1;
+  background: #fee2e2;
+  color: #c0392b;
+  border-color: #f5c5c5;
+  border-radius: 10px;
+  width: auto;
+  padding: 0 8px;
+  font-size: 0.65rem;
+  font-weight: 700;
+  letter-spacing: 0.02em;
 }
 
 .doc-block-delete--math {
@@ -465,6 +497,7 @@ body {
   font-size: 0.95rem;
   color: #333;
   font-weight: 600;
+  margin: 0;  /* reset h3 default margins */
 }
 
 .exam-question-box {
@@ -729,6 +762,22 @@ body {
   color: #888;
   margin: 0 0 10px;
   padding-top: 24px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+}
+
+.app-version {
+  font-size: 0.65rem;
+  font-weight: 600;
+  letter-spacing: 0.04em;
+  color: #fff;
+  background: #4a8fd4;
+  border-radius: 10px;
+  padding: 2px 7px;
+  line-height: 1.6;
+  font-family: monospace;
 }
 
 /* ── Symbol palette ─────────────────────────────────────────────────────────── */
@@ -936,17 +985,24 @@ body {
   background: #fff;
 }
 
-/* Block gaps: always visible on mobile (hover doesn't work on touch) */
+/* Block gaps: hidden by default, appear only when an adjacent block is focused */
 .exam-mode .block-gap {
-  opacity: 1;
+  opacity: 0;
   margin: 1px 0;
+}
+
+/* Show gap after the focused block */
+.exam-mode > div:focus-within > .block-gap,
+/* Show gap before the focused block (= gap after the preceding sibling) */
+.exam-mode > div:has(+ div:focus-within) > .block-gap {
+  opacity: 1;
 }
 
 .exam-mode .block-gap-btn {
   font-size: 0.7rem;
   padding: 1px 8px;
-  color: #ccc;
-  border-color: #eee;
+  color: #555;
+  border-color: #ddd;
 }
 
 .exam-mode .block-gap-btn:hover,
@@ -984,4 +1040,246 @@ body {
 .exam-copy-btn:disabled {
   opacity: 0.4;
   cursor: default;
+}
+
+.exam-copy-btn.copied {
+  background: #2e7d32;
+  cursor: default;
+}
+
+/* ── Symbol palette backdrop (mobile) ───────────────────────────────────────── */
+
+.symbol-backdrop {
+  display: none;
+}
+
+/* ── Student draft banner ───────────────────────────────────────────────────── */
+
+.student-draft-banner {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 10px 16px;
+  margin: 12px 0 0;
+  background: #fffbeb;
+  border: 1px solid #f0d070;
+  border-radius: 8px;
+  font-size: 0.85rem;
+  color: #6b5700;
+}
+
+.student-draft-view-btn {
+  margin-left: auto;
+  padding: 4px 12px;
+  font-size: 0.78rem;
+  font-weight: 600;
+  background: none;
+  border: 1px solid #c8a800;
+  border-radius: 12px;
+  color: #6b5700;
+  cursor: pointer;
+  white-space: nowrap;
+}
+
+.student-draft-view-btn:hover {
+  background: #fef3c7;
+}
+
+/* ── Mobile / touch ─────────────────────────────────────────────────────────── */
+
+@media (max-width: 640px) {
+  .editor-wrapper {
+    margin: 16px auto;
+    padding: 0 12px;
+  }
+
+  /* Toolbar scrolls horizontally — no wrapping on narrow screens */
+  .editor-toolbar {
+    flex-wrap: nowrap;
+    overflow-x: auto;
+    -webkit-overflow-scrolling: touch;
+    scrollbar-width: none;
+    padding: 4px 8px;
+    gap: 4px 6px;
+  }
+
+  .editor-toolbar::-webkit-scrollbar {
+    display: none;
+  }
+
+  /* Minimum 44 × 44 px touch targets */
+  .toolbar-btn {
+    min-height: 44px;
+    padding: 4px 14px;
+    flex-shrink: 0;
+  }
+
+  /* Delete button: visible on touch (hover doesn't exist) */
+  .doc-block-delete {
+    width: 36px;
+    height: 36px;
+    opacity: 0.65;
+    top: 6px;
+    right: 4px;
+  }
+
+  /* Block gap buttons: larger touch targets */
+  .block-gap-btn {
+    min-height: 36px;
+    padding: 6px 14px;
+    font-size: 0.82rem;
+  }
+
+  /* Symbol palette: slide up as a bottom sheet */
+  .symbol-backdrop {
+    display: block;
+    position: fixed;
+    inset: 0;
+    background: rgba(0, 0, 0, 0.35);
+    z-index: 499;
+  }
+
+  .symbol-popover {
+    position: fixed;
+    bottom: 0;
+    left: 0;
+    right: 0;
+    width: auto;
+    top: auto;
+    border-radius: 16px 16px 0 0;
+    border-bottom: none;
+    padding: 20px 16px 40px; /* extra bottom for iOS home indicator */
+    box-shadow: 0 -4px 32px rgba(0, 0, 0, 0.18);
+    z-index: 500;
+  }
+
+  /* Larger symbol cells */
+  .symbol-grid {
+    gap: 8px;
+  }
+
+  .symbol-btn {
+    min-height: 48px;
+    font-size: 1.5rem;
+  }
+
+  .symbol-tab {
+    min-height: 44px;
+  }
+
+  /* Student exam header */
+  .student-exam-header {
+    flex-wrap: wrap;
+    gap: 6px 10px;
+    padding: 12px 0 10px;
+  }
+
+  .student-back-btn {
+    min-height: 44px;
+    padding: 8px 16px;
+    font-size: 0.9rem;
+  }
+
+  .student-question-display {
+    margin: 10px 0 16px;
+    overflow-x: auto;
+  }
+
+  .exam-copy-btn {
+    padding: 12px 28px;
+    font-size: 0.9rem;
+    width: 100%;
+    justify-content: center;
+  }
+
+  .exam-copy-bar {
+    padding: 12px 0 4px;
+  }
+
+  /* App tabs */
+  .app-tabs {
+    padding: 10px 16px 0;
+    gap: 6px;
+  }
+
+  .app-tab {
+    padding: 8px 18px;
+    min-height: 44px;
+  }
+
+  /* Help popover: keep in viewport on narrow screens */
+  .toolbar-help-popover {
+    right: -8px;
+    white-space: normal;
+    width: 260px;
+  }
+
+  /* Document editor padding */
+  .document-editor {
+    padding: 0 4px 32px;
+  }
+
+  /* Exam demo page */
+  .exam-demo {
+    padding: 0 12px 40px;
+    gap: 16px;
+  }
+
+  .exam-header {
+    padding: 16px 0 4px;
+  }
+
+  .exam-header h2 {
+    font-size: 1.15rem;
+  }
+
+  /* Exam card footer: stack tools above buttons on narrow screens */
+  .exam-card-footer {
+    flex-wrap: wrap;
+    gap: 8px;
+    padding: 10px 14px 12px;
+  }
+
+  .exam-tools-used {
+    width: 100%;
+    padding-bottom: 6px;
+    border-bottom: 1px solid #f0f0f0;
+  }
+
+  .exam-question-box {
+    overflow-x: auto;
+    -webkit-overflow-scrolling: touch;
+    padding: 12px 14px 8px;
+  }
+
+  /* 44px touch targets on card buttons */
+  .exam-solution-toggle {
+    min-height: 44px;
+    padding: 8px 16px;
+  }
+
+  .exam-try-btn {
+    min-height: 44px;
+    padding: 8px 18px;
+    margin-left: 0;
+    flex: 1;
+    text-align: center;
+  }
+
+  /* Solution steps: keep math from overflowing */
+  .exam-solution {
+    padding: 12px 14px 16px;
+    overflow-x: auto;
+  }
+
+  .exam-step {
+    overflow-x: auto;
+    -webkit-overflow-scrolling: touch;
+  }
+
+  .exam-answer-box {
+    flex-wrap: wrap;
+    gap: 6px;
+    overflow-x: auto;
+  }
 }
