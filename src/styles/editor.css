@@ -497,6 +497,7 @@ body {
   font-size: 0.95rem;
   color: #333;
   font-weight: 600;
+  margin: 0;  /* reset h3 default margins */
 }
 
 .exam-question-box {
@@ -1200,5 +1201,69 @@ body {
   /* Document editor padding */
   .document-editor {
     padding: 0 4px 32px;
+  }
+
+  /* Exam demo page */
+  .exam-demo {
+    padding: 0 12px 40px;
+    gap: 16px;
+  }
+
+  .exam-header {
+    padding: 16px 0 4px;
+  }
+
+  .exam-header h2 {
+    font-size: 1.15rem;
+  }
+
+  /* Exam card footer: stack tools above buttons on narrow screens */
+  .exam-card-footer {
+    flex-wrap: wrap;
+    gap: 8px;
+    padding: 10px 14px 12px;
+  }
+
+  .exam-tools-used {
+    width: 100%;
+    padding-bottom: 6px;
+    border-bottom: 1px solid #f0f0f0;
+  }
+
+  .exam-question-box {
+    overflow-x: auto;
+    -webkit-overflow-scrolling: touch;
+    padding: 12px 14px 8px;
+  }
+
+  /* 44px touch targets on card buttons */
+  .exam-solution-toggle {
+    min-height: 44px;
+    padding: 8px 16px;
+  }
+
+  .exam-try-btn {
+    min-height: 44px;
+    padding: 8px 18px;
+    margin-left: 0;
+    flex: 1;
+    text-align: center;
+  }
+
+  /* Solution steps: keep math from overflowing */
+  .exam-solution {
+    padding: 12px 14px 16px;
+    overflow-x: auto;
+  }
+
+  .exam-step {
+    overflow-x: auto;
+    -webkit-overflow-scrolling: touch;
+  }
+
+  .exam-answer-box {
+    flex-wrap: wrap;
+    gap: 6px;
+    overflow-x: auto;
   }
 }

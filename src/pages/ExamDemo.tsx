@@ -9,7 +9,7 @@ export interface ExamQuestionRef {
   groups: ToolGroups
 }
 
-// ─── Static KaTeX answer block ────────────────────────────────────────────────
+// ─── Static KaTeX render ──────────────────────────────────────────────────────
 
 function KaTeX({ tex, display = true }: { tex: string; display?: boolean }) {
   let html = ''
@@ -49,29 +49,42 @@ interface CardProps {
 function GroupBadge({ id, active }: { id: GroupId; active: boolean }) {
   const { label, preview } = GROUP_META[id]
   return (
-    <span className={`exam-group-badge ${active ? 'active' : 'inactive'}`} title={label}>
+    <span
+      className={`exam-group-badge ${active ? 'active' : 'inactive'}`}
+      aria-label={active ? `${label} tools available` : `${label} tools not needed`}
+    >
       {preview}
+      <span className="sr-only">{label}{active ? '' : ' (not required)'}</span>
     </span>
   )
 }
 
 function QuestionCard({ q, onTry }: CardProps) {
   const [showSolution, setShowSolution] = useState(false)
+  const solutionId = `solution-${q.number}`
+  const headingId  = `heading-${q.number}`
 
   return (
-    <div className="exam-card">
+    <article className="exam-card" aria-labelledby={headingId}>
       <div className="exam-card-header">
-        <span className="exam-q-number">Oppgave {q.number}</span>
-        <span className="exam-q-title">{q.title}</span>
+        <span className="exam-q-number" aria-hidden="true">Oppgave {q.number}</span>
+        <h3 className="exam-q-title" id={headingId}>
+          <span className="sr-only">Question {q.number}: </span>
+          {q.title}
+        </h3>
       </div>
 
-      <div className="exam-question-box">
+      <div className="exam-question-box" aria-label="Question statement">
         <KaTeX tex={q.questionTex} />
       </div>
 
       <div className="exam-card-footer">
-        <div className="exam-tools-used">
-          <span className="exam-tools-label">Tools:</span>
+        <div
+          className="exam-tools-used"
+          role="group"
+          aria-label="Required tool groups"
+        >
+          <span className="exam-tools-label" aria-hidden="true">Tools:</span>
           {(Object.keys(q.suggestedGroups) as GroupId[]).map(id => (
             <GroupBadge key={id} id={id} active={q.suggestedGroups[id]} />
           ))}
@@ -79,34 +92,47 @@ function QuestionCard({ q, onTry }: CardProps) {
         <button
           className="exam-solution-toggle"
           onClick={() => setShowSolution(s => !s)}
+          aria-expanded={showSolution}
+          aria-controls={solutionId}
+          aria-label={showSolution ? `Hide solution for question ${q.number}` : `Show solution for question ${q.number}`}
         >
           {showSolution ? '▾ Hide solution' : '▸ Show solution'}
         </button>
         <button
           className="exam-try-btn"
-          onClick={() => onTry({ number: q.number, title: q.title, questionTex: q.questionTex, groups: q.suggestedGroups })}
-          title="Open the editor with only the tools needed for this question"
+          onClick={() => onTry({
+            number: q.number,
+            title: q.title,
+            questionTex: q.questionTex,
+            groups: q.suggestedGroups,
+          })}
+          aria-label={`Try question ${q.number} in the editor`}
         >
           Try in editor →
         </button>
       </div>
 
       {showSolution && (
-        <div className="exam-solution">
-          <div className="exam-solution-label">Solution</div>
+        <div
+          id={solutionId}
+          className="exam-solution"
+          role="region"
+          aria-label={`Solution for question ${q.number}`}
+        >
+          <div className="exam-solution-label" aria-hidden="true">Solution</div>
           {q.steps.map((s, i) => (
             <div key={i} className="exam-step">
               {s.label && <div className="exam-step-label">{s.label}</div>}
               <KaTeX tex={s.tex} />
             </div>
           ))}
-          <div className="exam-answer-box">
+          <div className="exam-answer-box" role="status" aria-label="Final answer">
             <span className="exam-answer-label">Answer</span>
             <KaTeX tex={q.answer} display={false} />
           </div>
         </div>
       )}
-    </div>
+    </article>
   )
 }
 
@@ -230,18 +256,19 @@ interface Props {
 
 export function ExamDemo({ onTryQuestion }: Props) {
   return (
-    <div className="exam-demo">
-      <div className="exam-header">
+    <main className="exam-demo" aria-label="TMA4100 Exam questions">
+      <header className="exam-header">
         <h2>TMA4100 Matematikk 1</h2>
         <p>Eksamen — 2. desember 2024 &nbsp;·&nbsp; Selected calculation questions</p>
         <p className="exam-note">
           Click <strong>Try in editor →</strong> on any question to open the editor
           with only the tool groups that question requires.
         </p>
-      </div>
+      </header>
+
       {QUESTIONS.map(q => (
         <QuestionCard key={q.number} q={q} onTry={onTryQuestion} />
       ))}
-    </div>
+    </main>
   )
 }
