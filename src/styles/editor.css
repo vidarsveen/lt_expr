@@ -762,6 +762,22 @@ body {
   color: #888;
   margin: 0 0 10px;
   padding-top: 24px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+}
+
+.app-version {
+  font-size: 0.65rem;
+  font-weight: 600;
+  letter-spacing: 0.04em;
+  color: #fff;
+  background: #4a8fd4;
+  border-radius: 10px;
+  padding: 2px 7px;
+  line-height: 1.6;
+  font-family: monospace;
 }
 
 /* ── Symbol palette ─────────────────────────────────────────────────────────── */

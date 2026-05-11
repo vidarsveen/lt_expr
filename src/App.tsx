@@ -5,6 +5,8 @@ import { StudentExamView } from './components/StudentExamView'
 import { ExamDemo, ExamQuestionRef } from './pages/ExamDemo'
 import { ALL_GROUPS, ToolGroups } from './types/toolConfig'
 
+const APP_VERSION = 'v0.3.0'
+
 type Tab = 'editor' | 'exam'
 
 export default function App() {
@@ -23,7 +25,10 @@ export default function App() {
 
   return (
     <div>
-      <h1 className="app-title">LaTeX Math Editor</h1>
+      <h1 className="app-title">
+        LaTeX Math Editor
+        <span className="app-version">{APP_VERSION}</span>
+      </h1>
 
       <nav className="app-tabs" role="tablist" aria-label="Application mode">
         <button
