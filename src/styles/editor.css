@@ -1040,11 +1040,14 @@ math-field:focus-within {
 
 /* Toolbar hidden until the editor is focused */
 .exam-mode .editor-toolbar {
-  display: none;
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity 0.15s;
 }
 
 .exam-mode .mathlive-wrapper:focus-within .editor-toolbar {
-  display: flex;
+  opacity: 1;
+  pointer-events: auto;
 }
 
 /* Unfocused math display: invisible chrome, acts like inline math */
