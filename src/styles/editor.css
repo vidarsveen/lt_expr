@@ -464,10 +464,13 @@ math-field:focus-within {
   white-space: nowrap;
 }
 
-.block-gap-btn:hover {
+.block-gap-btn:hover,
+.block-gap-btn:focus {
   background: #e8f0fe;
   border-color: #4a8fd4;
   color: #2d6bb0;
+  outline: 2px solid #4a8fd4;
+  outline-offset: 2px;
 }
 
 /* Full-document export bar */
@@ -1086,10 +1089,14 @@ math-field:focus-within {
   margin: 1px 0;
 }
 
-/* Show gap after the focused block */
+/* Show gap after the focused block, or when the gap button itself is focused */
 .exam-mode > div:focus-within > .block-gap,
 /* Show gap before the focused block (= gap after the preceding sibling) */
 .exam-mode > div:has(+ div:focus-within) > .block-gap {
+  opacity: 1;
+}
+
+.exam-mode .block-gap:focus-within {
   opacity: 1;
 }
 

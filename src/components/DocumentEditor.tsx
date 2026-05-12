@@ -44,7 +44,7 @@ function TextBlockView({
         value={block.content}
         onChange={e => onChange(block.id, e.target.value)}
         onBlur={handleBlur}
-        placeholder="Write text here — explanation, reasoning, conclusion…"
+        placeholder="Write your explanation here — approach, reasoning, observations…"
         rows={1}
         aria-label="Text answer"
       />
@@ -111,14 +111,13 @@ interface GapProps {
 
 function BlockGap({ onInsertText, onInsertMath }: GapProps) {
   return (
-    <div className="block-gap" aria-hidden="true">
-      <div className="block-gap-line" />
+    <div className="block-gap" role="group" aria-label="Insert block">
+      <div className="block-gap-line" aria-hidden="true" />
       <div className="block-gap-buttons">
         <button
           className="block-gap-btn"
           onClick={onInsertText}
           aria-label="Insert text block"
-          tabIndex={-1}
         >
           + Text
         </button>
@@ -126,12 +125,11 @@ function BlockGap({ onInsertText, onInsertMath }: GapProps) {
           className="block-gap-btn"
           onClick={onInsertMath}
           aria-label="Insert math block"
-          tabIndex={-1}
         >
           + Math
         </button>
       </div>
-      <div className="block-gap-line" />
+      <div className="block-gap-line" aria-hidden="true" />
     </div>
   )
 }
@@ -144,7 +142,9 @@ interface Props {
 }
 
 export function DocumentEditor({ examMode = false, onChange }: Props) {
-  const [blocks, setBlocks] = useState<DocumentBlock[]>(() => [makeMathBlock()])
+  const [blocks, setBlocks] = useState<DocumentBlock[]>(() =>
+    examMode ? [makeTextBlock(), makeMathBlock()] : [makeMathBlock()]
+  )
   const [mathLatex, setMathLatex] = useState<Record<string, string>>({})
   const [focusBlockId, setFocusBlockId] = useState<string | null>(null)
   const [pendingDeleteId, setPendingDeleteId] = useState<string | null>(null)
@@ -252,9 +252,9 @@ export function DocumentEditor({ examMode = false, onChange }: Props) {
             className={`exam-copy-btn${copyDone ? ' copied' : ''}`}
             onClick={handleCopy}
             disabled={!fullLatex}
-            aria-label="Copy your answer as LaTeX to clipboard"
+            aria-label="Copy full solution as LaTeX to clipboard"
           >
-            {copyDone ? '✓ Copied!' : 'Copy answer as LaTeX'}
+            {copyDone ? '✓ Copied!' : 'Copy full solution as LaTeX'}
           </button>
         </div>
       ) : (
