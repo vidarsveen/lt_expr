@@ -4,6 +4,8 @@ import type { MathfieldElement } from 'mathlive'
 import { MATH_TOOLS } from '../config/mathTools'
 import { Fragment } from 'react'
 
+type DemoMode = 'interactive' | 'video'
+
 interface Step {
   toolId: string | null
   latex: string
@@ -60,6 +62,7 @@ export function LhopitalDemo({ onClose }: Props) {
   const mfRef = useRef<MathfieldElement | null>(null)
   const [stepIdx, setStepIdx] = useState(0)
   const [playing, setPlaying] = useState(false)
+  const [mode, setMode] = useState<DemoMode>('interactive')
   const timerRef = useRef<ReturnType<typeof setTimeout> | null>(null)
 
   const current = STEPS[stepIdx]
@@ -118,18 +121,44 @@ export function LhopitalDemo({ onClose }: Props) {
         <header className="demo-header">
           <div>
             <h3 className="demo-title">L'Hôpital's rule — step by step</h3>
-            <p className="demo-subtitle">How to solve Oppgave 1 using the editor</p>
+            <div className="demo-mode-tabs" role="tablist" aria-label="Demo mode">
+              <button
+                className={`demo-mode-tab ${mode === 'interactive' ? 'active' : ''}`}
+                role="tab"
+                aria-selected={mode === 'interactive'}
+                onClick={() => setMode('interactive')}
+              >Interactive</button>
+              <button
+                className={`demo-mode-tab ${mode === 'video' ? 'active' : ''}`}
+                role="tab"
+                aria-selected={mode === 'video'}
+                onClick={() => setMode('video')}
+              >Keyboard demo ▶</button>
+            </div>
           </div>
           <button className="demo-close-btn" onClick={onClose} aria-label="Close demo">×</button>
         </header>
 
-        {/* Step label */}
+        {/* Video mode */}
+        {mode === 'video' && (
+          <video
+            className="demo-video"
+            src="/lt_expr/demo-keyboard.webm"
+            controls
+            autoPlay
+            aria-label="Keyboard demo: solving the L'Hôpital question step by step"
+          />
+        )}
+
+        {/* Step label (interactive only) */}
+        {mode === 'interactive' && (
         <div className="demo-step-action" aria-live="polite" aria-atomic="true">
           {current.action}
         </div>
+        )}
 
-        {/* Live math field with toolbar — toolbar read-only with highlight */}
-        <div className="demo-editor-frame">
+        {/* Interactive content */}
+        {mode === 'interactive' && <div className="demo-editor-frame">
           <div
             className="editor-toolbar"
             role="toolbar"
@@ -160,48 +189,48 @@ export function LhopitalDemo({ onClose }: Props) {
             math-virtual-keyboard-policy="manual"
             read-only=""
           />
-        </div>
+        </div>}
 
-        {/* Annotation */}
-        <p className="demo-annotation">{current.annotation}</p>
+        {/* Annotation + navigation (interactive only) */}
+        {mode === 'interactive' && <>
+          <p className="demo-annotation">{current.annotation}</p>
 
-        {/* Step dots */}
-        <div className="demo-progress" role="tablist" aria-label="Demo steps">
-          {STEPS.map((s, i) => (
+          <div className="demo-progress" role="tablist" aria-label="Demo steps">
+            {STEPS.map((s, i) => (
+              <button
+                key={s.action}
+                className={`demo-dot ${i === stepIdx ? 'active' : i < stepIdx ? 'done' : ''}`}
+                onClick={() => goTo(i)}
+                aria-label={`Step ${i + 1}: ${s.action}`}
+                aria-current={i === stepIdx ? 'step' : undefined}
+              />
+            ))}
+          </div>
+
+          <div className="demo-controls">
             <button
-              key={s.action}
-              className={`demo-dot ${i === stepIdx ? 'active' : i < stepIdx ? 'done' : ''}`}
-              onClick={() => goTo(i)}
-              aria-label={`Step ${i + 1}: ${s.action}`}
-              aria-current={i === stepIdx ? 'step' : undefined}
-            />
-          ))}
-        </div>
+              className="demo-btn"
+              onClick={() => goTo(Math.max(0, stepIdx - 1))}
+              disabled={stepIdx === 0}
+              aria-label="Previous step"
+            >← Prev</button>
+            <button
+              className="demo-btn demo-btn--play"
+              onClick={playPause}
+              aria-label={playing ? 'Pause auto-play' : isLast ? 'Replay from start' : 'Start auto-play'}
+            >
+              {playing ? '⏸ Pause' : isLast ? '↺ Replay' : '▶ Play'}
+            </button>
+            <button
+              className="demo-btn"
+              onClick={() => goTo(Math.min(STEPS.length - 1, stepIdx + 1))}
+              disabled={isLast}
+              aria-label="Next step"
+            >Next →</button>
+          </div>
 
-        {/* Controls */}
-        <div className="demo-controls">
-          <button
-            className="demo-btn"
-            onClick={() => goTo(Math.max(0, stepIdx - 1))}
-            disabled={stepIdx === 0}
-            aria-label="Previous step"
-          >← Prev</button>
-          <button
-            className="demo-btn demo-btn--play"
-            onClick={playPause}
-            aria-label={playing ? 'Pause auto-play' : isLast ? 'Replay from start' : 'Start auto-play'}
-          >
-            {playing ? '⏸ Pause' : isLast ? '↺ Replay' : '▶ Play'}
-          </button>
-          <button
-            className="demo-btn"
-            onClick={() => goTo(Math.min(STEPS.length - 1, stepIdx + 1))}
-            disabled={isLast}
-            aria-label="Next step"
-          >Next →</button>
-        </div>
-
-        <p className="demo-step-count">Step {stepIdx + 1} of {STEPS.length}</p>
+          <p className="demo-step-count">Step {stepIdx + 1} of {STEPS.length}</p>
+        </>}
       </div>
     </div>
   )
