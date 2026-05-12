@@ -133,7 +133,7 @@ export function LhopitalDemo({ onClose }: Props) {
                 role="tab"
                 aria-selected={mode === 'video'}
                 onClick={() => setMode('video')}
-              >Keyboard demo ▶</button>
+              >Student demo ▶</button>
             </div>
           </div>
           <button className="demo-close-btn" onClick={onClose} aria-label="Close demo">×</button>
@@ -143,10 +143,10 @@ export function LhopitalDemo({ onClose }: Props) {
         {mode === 'video' && (
           <video
             className="demo-video"
-            src="/lt_expr/demo-keyboard.webm"
+            src="/lt_expr/demo-full.webm"
             controls
             autoPlay
-            aria-label="Keyboard demo: solving the L'Hôpital question step by step"
+            aria-label="Student demo: full L'Hôpital solution with text and math blocks"
           />
         )}
 

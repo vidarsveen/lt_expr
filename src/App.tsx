@@ -4,7 +4,7 @@ import { StudentExamView } from './components/StudentExamView'
 import { LhopitalDemo } from './components/LhopitalDemo'
 import { ExamDemo, ExamQuestionRef } from './pages/ExamDemo'
 
-const APP_VERSION = 'v0.5.0'
+const APP_VERSION = 'v0.5.1'
 
 type Tab = 'editor' | 'exam'
 
