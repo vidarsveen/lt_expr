@@ -1019,7 +1019,7 @@ math-field:focus-within {
   display: none;
 }
 
-.exam-mode .editor-wrapper:focus-within .editor-toolbar {
+.exam-mode .mathlive-wrapper:focus-within .editor-toolbar {
   display: flex;
 }
 
