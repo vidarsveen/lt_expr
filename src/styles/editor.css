@@ -1601,3 +1601,36 @@ math-field:focus-within {
     text-align: center;
   }
 }
+
+/* ── Demo mode tabs ──────────────────────────────────────────────────────────── */
+
+.demo-mode-tabs {
+  display: flex;
+  gap: 6px;
+  margin-top: 8px;
+}
+
+.demo-mode-tab {
+  padding: 4px 14px;
+  border: 1.5px solid #d1d5db;
+  border-radius: 16px;
+  background: #f9fafb;
+  color: #6b7280;
+  font-size: 0.8rem;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.15s;
+}
+
+.demo-mode-tab.active {
+  background: #4a8fd4;
+  border-color: #4a8fd4;
+  color: #fff;
+}
+
+.demo-video {
+  width: 100%;
+  border-radius: 10px;
+  background: #000;
+  max-height: 60vh;
+}
