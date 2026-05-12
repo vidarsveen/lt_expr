@@ -1,18 +1,17 @@
 import { useState } from 'react'
 import { DocumentEditor } from './components/DocumentEditor'
-import { ToolGroupPicker } from './components/ToolGroupPicker'
 import { StudentExamView } from './components/StudentExamView'
+import { LhopitalDemo } from './components/LhopitalDemo'
 import { ExamDemo, ExamQuestionRef } from './pages/ExamDemo'
-import { ALL_GROUPS, ToolGroups } from './types/toolConfig'
 
-const APP_VERSION = 'v0.4.0'
+const APP_VERSION = 'v0.5.0'
 
 type Tab = 'editor' | 'exam'
 
 export default function App() {
   const [tab, setTab]               = useState<Tab>('editor')
-  const [toolGroups, setToolGroups] = useState<ToolGroups>(ALL_GROUPS)
   const [activeQuestion, setActiveQuestion] = useState<ExamQuestionRef | null>(null)
+  const [showDemo, setShowDemo]     = useState(false)
 
   function handleTryQuestion(ref: ExamQuestionRef) {
     setActiveQuestion(ref)
@@ -21,10 +20,11 @@ export default function App() {
   function switchTab(t: Tab) {
     setTab(t)
     setActiveQuestion(null)
+    setShowDemo(false)
   }
 
   return (
-    <div>
+    <div className="app-root">
       <h1 className="app-title">
         LaTeX Math Editor
         <span className="app-version">{APP_VERSION}</span>
@@ -58,11 +58,9 @@ export default function App() {
           id="panel-editor"
           role="tabpanel"
           aria-labelledby="tab-editor"
+          style={{ maxWidth: 710, margin: '10px auto', padding: '0 20px' }}
         >
-          <div style={{ maxWidth: 820, margin: '10px auto', padding: '0 20px' }}>
-            <ToolGroupPicker groups={toolGroups} onChange={setToolGroups} />
-          </div>
-          <DocumentEditor toolGroups={toolGroups} />
+          <DocumentEditor />
         </div>
       )}
 
@@ -72,7 +70,10 @@ export default function App() {
           role="tabpanel"
           aria-labelledby="tab-exam"
         >
-          <ExamDemo onTryQuestion={handleTryQuestion} />
+          <ExamDemo
+            onTryQuestion={handleTryQuestion}
+            onWatchDemo={() => setShowDemo(true)}
+          />
         </div>
       )}
 
@@ -88,6 +89,8 @@ export default function App() {
           />
         </div>
       )}
+
+      {showDemo && <LhopitalDemo onClose={() => setShowDemo(false)} />}
     </div>
   )
 }
