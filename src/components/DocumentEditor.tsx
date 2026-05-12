@@ -1,6 +1,5 @@
 import { useState, useRef, useEffect, useCallback, memo } from 'react'
 import { DocumentBlock, makeTextBlock, makeMathBlock } from '../types/document'
-import { ToolGroups, ALL_GROUPS } from '../types/toolConfig'
 import { MathLiveEditor } from './MathLiveEditor'
 
 // ─── Text block ───────────────────────────────────────────────────────────────
@@ -67,7 +66,6 @@ function TextBlockView({
 
 interface MathBlockProps {
   id: string
-  toolGroups: ToolGroups
   onLatexChange: (id: string, latex: string) => void
   onDelete: (id: string) => void
   canDelete: boolean
@@ -76,7 +74,7 @@ interface MathBlockProps {
 }
 
 const MathBlockView = memo(function MathBlockView({
-  id, toolGroups, onLatexChange, onDelete, canDelete, pendingDelete, focusOnMount,
+  id, onLatexChange, onDelete, canDelete, pendingDelete, focusOnMount,
 }: MathBlockProps) {
   const handleLatexChange = useCallback(
     (latex: string) => onLatexChange(id, latex),
@@ -86,7 +84,6 @@ const MathBlockView = memo(function MathBlockView({
   return (
     <div className="doc-block doc-block--math">
       <MathLiveEditor
-        toolGroups={toolGroups}
         showLatexBar={false}
         onLatexChange={handleLatexChange}
         autoFocus={focusOnMount}
@@ -142,12 +139,11 @@ function BlockGap({ onInsertText, onInsertMath }: GapProps) {
 // ─── Document editor ──────────────────────────────────────────────────────────
 
 interface Props {
-  toolGroups?: ToolGroups
   examMode?: boolean
   onChange?: (latex: string) => void
 }
 
-export function DocumentEditor({ toolGroups = ALL_GROUPS, examMode = false, onChange }: Props) {
+export function DocumentEditor({ examMode = false, onChange }: Props) {
   const [blocks, setBlocks] = useState<DocumentBlock[]>(() => [makeMathBlock()])
   const [mathLatex, setMathLatex] = useState<Record<string, string>>({})
   const [focusBlockId, setFocusBlockId] = useState<string | null>(null)
@@ -233,7 +229,6 @@ export function DocumentEditor({ toolGroups = ALL_GROUPS, examMode = false, onCh
           ) : (
             <MathBlockView
               id={block.id}
-              toolGroups={toolGroups}
               onLatexChange={handleLatexChange}
               onDelete={handleDelete}
               canDelete={canDelete}
@@ -270,6 +265,7 @@ export function DocumentEditor({ toolGroups = ALL_GROUPS, examMode = false, onCh
             className="copy-btn"
             onClick={() => navigator.clipboard.writeText(fullLatex)}
             disabled={!fullLatex}
+            aria-label="Copy full LaTeX to clipboard"
           >
             Copy
           </button>

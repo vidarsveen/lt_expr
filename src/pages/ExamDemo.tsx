@@ -6,7 +6,6 @@ export interface ExamQuestionRef {
   number: string
   title: string
   questionTex: string
-  groups: ToolGroups
 }
 
 // ─── Static KaTeX render ──────────────────────────────────────────────────────
@@ -44,6 +43,7 @@ interface Question {
 interface CardProps {
   q: Question
   onTry: (ref: ExamQuestionRef) => void
+  onDemo?: () => void
 }
 
 function GroupBadge({ id, active }: { id: GroupId; active: boolean }) {
@@ -59,7 +59,7 @@ function GroupBadge({ id, active }: { id: GroupId; active: boolean }) {
   )
 }
 
-function QuestionCard({ q, onTry }: CardProps) {
+function QuestionCard({ q, onTry, onDemo }: CardProps) {
   const [showSolution, setShowSolution] = useState(false)
   const solutionId = `solution-${q.number}`
   const headingId  = `heading-${q.number}`
@@ -98,13 +98,21 @@ function QuestionCard({ q, onTry }: CardProps) {
         >
           {showSolution ? '▾ Hide solution' : '▸ Show solution'}
         </button>
+        {onDemo && (
+          <button
+            className="exam-demo-btn"
+            onClick={onDemo}
+            aria-label="Watch a step-by-step demo for this question"
+          >
+            Watch demo
+          </button>
+        )}
         <button
           className="exam-try-btn"
           onClick={() => onTry({
             number: q.number,
             title: q.title,
             questionTex: q.questionTex,
-            groups: q.suggestedGroups,
           })}
           aria-label={`Try question ${q.number} in the editor`}
         >
@@ -252,22 +260,27 @@ const QUESTIONS: Question[] = [
 
 interface Props {
   onTryQuestion: (ref: ExamQuestionRef) => void
+  onWatchDemo?: () => void
 }
 
-export function ExamDemo({ onTryQuestion }: Props) {
+export function ExamDemo({ onTryQuestion, onWatchDemo }: Props) {
   return (
     <main className="exam-demo" aria-label="TMA4100 Exam questions">
       <header className="exam-header">
         <h2>TMA4100 Matematikk 1</h2>
         <p>Eksamen — 2. desember 2024 &nbsp;·&nbsp; Selected calculation questions</p>
         <p className="exam-note">
-          Click <strong>Try in editor →</strong> on any question to open the editor
-          with only the tool groups that question requires.
+          Click <strong>Try in editor →</strong> to open the math editor for any question.
         </p>
       </header>
 
       {QUESTIONS.map(q => (
-        <QuestionCard key={q.number} q={q} onTry={onTryQuestion} />
+        <QuestionCard
+          key={q.number}
+          q={q}
+          onTry={onTryQuestion}
+          onDemo={q.number === '1' ? onWatchDemo : undefined}
+        />
       ))}
     </main>
   )
