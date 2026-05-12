@@ -10,9 +10,19 @@ declare module 'react' {
           'default-mode'?: 'math' | 'text' | 'latex'
           placeholder?: string
           value?: string
+          'read-only'?: boolean | ''
         },
         HTMLElement
       >
+    }
+  }
+}
+
+declare global {
+  interface Window {
+    mathVirtualKeyboard: {
+      layouts: unknown[]
+      container: Element | null
     }
   }
 }

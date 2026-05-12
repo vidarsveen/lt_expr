@@ -104,7 +104,6 @@ export function StudentExamView({ question, onBack }: Props) {
       >
         <div className="student-answer-label" id="answer-label">Your answer</div>
         <DocumentEditor
-          toolGroups={question.groups}
           examMode
           onChange={handleAnswerChange}
         />
