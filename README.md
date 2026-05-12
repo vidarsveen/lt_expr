@@ -5,6 +5,8 @@ KaTeX-rendered expressions with a structured AST — students type math the way 
 
 **Live site:** https://vidarsveen.github.io/lt_expr/
 
+**Student demo (text + math):** https://vidarsveen.github.io/lt_expr/demo-full.webm — complete L'Hôpital solution with text explanation blocks and math formula blocks
+
 **Keyboard demo:** https://vidarsveen.github.io/lt_expr/demo-keyboard.webm — solving L'Hôpital's rule question using only the keyboard (Tab → toolbar, `/` fraction shortcut, `sin` inline shortcut)
 
 ## Features
